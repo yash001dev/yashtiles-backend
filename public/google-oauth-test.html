@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Google OAuth Test</title>
+</head>
+<body>
+    <h1>Google OAuth Authentication Test</h1>
+    
+    <h2>Option 1: Server-side OAuth Flow</h2>
+    <a href="/api/v1/auth/google">Login with Google (Server-side)</a>
+    
+    <h2>Option 2: Client-side OAuth (for frontend apps)</h2>
+    <p>Use the /api/v1/auth/google/login endpoint with the Google access token from your frontend</p>
+    
+    <div id="google-signin-button"></div>
+    
+    <script>
+        // Example frontend implementation
+        function handleGoogleSignIn(googleResponse) {
+            // This would be implemented in your frontend
+            fetch('/api/v1/auth/google/login', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    accessToken: googleResponse.access_token,
+                    email: googleResponse.email,
+                    firstName: googleResponse.given_name,
+                    lastName: googleResponse.family_name,
+                    avatar: googleResponse.picture
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('Success:', data);
+                // Handle successful login
+            })
+            .catch((error) => {
+                console.error('Error:', error);
+            });
+        }
+    </script>
+</body>
+</html>
