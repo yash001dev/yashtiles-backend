@@ -33,37 +33,46 @@ export class AuthService {
     }
 
     const user = await this.usersService.create(registerDto);
-    const tokens = await this.generateTokens(
+
+    // Generate email verification token
+    const verificationToken = uuidv4();
+    await this.usersService.setEmailVerificationToken(
       user._id.toString(),
+      verificationToken
+    );
+
+    // Send welcome email with verification link
+    await this.notificationsService.sendWelcomeEmailWithVerification(
       user.email,
-      user.role
+      user.firstName,
+      verificationToken
     );
 
-    await this.usersService.updateRefreshToken(
-      user._id.toString(),
-      tokens.refreshToken
-    );
-
-    // Send welcome email
-    await this.notificationsService.sendWelcomeEmail(
-      user.email,
-      user.firstName
-    );
-
+    // Note: User will get tokens only after email verification
     return {
+      message:
+        "Registration successful! Please check your email to verify your account.",
       user: {
         id: user._id.toString(),
         firstName: user.firstName,
         lastName: user.lastName,
         email: user.email,
         role: user.role,
+        isEmailVerified: user.isEmailVerified,
       },
-      tokens,
     };
   }
 
   async login(loginDto: LoginDto) {
     const user = await this.validateUser(loginDto.email, loginDto.password);
+
+    // Check if email is verified
+    if (!user.isEmailVerified) {
+      throw new UnauthorizedException(
+        "Please verify your email address before logging in. Check your inbox for the verification link."
+      );
+    }
+
     const tokens = await this.generateTokens(
       user._id.toString(),
       user.email,
@@ -83,6 +92,7 @@ export class AuthService {
         lastName: user.lastName,
         email: user.email,
         role: user.role,
+        isEmailVerified: user.isEmailVerified,
       },
       tokens,
     };
@@ -183,6 +193,72 @@ export class AuthService {
     return { message: "Password has been reset successfully" };
   }
 
+  async verifyEmail(email: string, token: string) {
+    try {
+      const user = await this.usersService.verifyEmail(email, token);
+
+      // Send success email
+      await this.notificationsService.sendEmailVerificationSuccess(
+        user.email,
+        user.firstName
+      );
+
+      // Generate tokens for verified user
+      const tokens = await this.generateTokens(
+        user._id.toString(),
+        user.email,
+        user.role
+      );
+
+      await this.usersService.updateRefreshToken(
+        user._id.toString(),
+        tokens.refreshToken
+      );
+
+      return {
+        message: "Email verified successfully! You can now log in.",
+        user: {
+          id: user._id.toString(),
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          role: user.role,
+          isEmailVerified: user.isEmailVerified,
+        },
+        tokens,
+      };
+    } catch (error) {
+      throw new BadRequestException("Invalid or expired verification token");
+    }
+  }
+
+  async resendVerificationEmail(email: string) {
+    const user = await this.usersService.findByEmail(email);
+    if (!user) {
+      throw new BadRequestException("User not found");
+    }
+
+    if (user.isEmailVerified) {
+      throw new BadRequestException("Email is already verified");
+    }
+
+    // Generate new verification token
+    const verificationToken = uuidv4();
+    await this.usersService.setEmailVerificationToken(
+      user._id.toString(),
+      verificationToken
+    );
+
+    // Send verification email
+    await this.notificationsService.sendEmailVerificationOnly(
+      user.email,
+      user.firstName,
+      verificationToken
+    );
+
+    return { message: "Verification email sent! Please check your inbox." };
+  }
+
   async googleLogin(googleLoginDto: GoogleLoginDto) {
     const { email, firstName, lastName, avatar, accessToken, refreshToken } =
       googleLoginDto;
@@ -213,8 +289,8 @@ export class AuthService {
 
       user = await this.usersService.create(createUserDto);
 
-      // Send welcome email
-      await this.notificationsService.sendWelcomeEmail(
+      // Send welcome email (Google emails are already verified)
+      await this.notificationsService.sendEmailVerificationSuccess(
         user.email,
         user.firstName
       );

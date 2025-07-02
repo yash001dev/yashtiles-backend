@@ -16,6 +16,8 @@ import { RegisterDto } from "./dto/register.dto";
 import { LoginDto } from "./dto/login.dto";
 import { ForgotPasswordDto } from "./dto/forgot-password.dto";
 import { ResetPasswordDto } from "./dto/reset-password.dto";
+import { VerifyEmailDto } from "./dto/verify-email.dto";
+import { ResendVerificationDto } from "./dto/resend-verification.dto";
 import { RefreshTokenGuard } from "./guards/refresh-token.guard";
 import { JwtAuthGuard } from "./guards/jwt-auth.guard";
 import { GoogleAuthGuard } from "./guards/google-auth.guard";
@@ -30,24 +32,8 @@ export class AuthController {
   @Post("register")
   @ApiOperation({ summary: "Register a new user" })
   @ApiResponse({ status: 201, description: "User registered successfully" })
-  async register(
-    @Body() registerDto: RegisterDto,
-    @Res({ passthrough: true }) response: Response
-  ) {
-    const result = await this.authService.register(registerDto);
-
-    // Set refresh token as HTTP-only cookie
-    response.cookie("refresh_token", result.tokens.refreshToken, {
-      httpOnly: true,
-      secure: process.env.NODE_ENV === "production",
-      sameSite: "strict",
-      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    });
-
-    return {
-      user: result.user,
-      accessToken: result.tokens.accessToken,
-    };
+  async register(@Body() registerDto: RegisterDto) {
+    return this.authService.register(registerDto);
   }
 
   @Post("login")
@@ -128,6 +114,46 @@ export class AuthController {
   @ApiOperation({ summary: "Reset password" })
   async resetPassword(@Body() resetPasswordDto: ResetPasswordDto) {
     return this.authService.resetPassword(resetPasswordDto);
+  }
+
+  @Post("verify-email")
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: "Verify email address" })
+  @ApiResponse({ status: 200, description: "Email verified successfully" })
+  async verifyEmail(
+    @Body() verifyEmailDto: VerifyEmailDto,
+    @Res({ passthrough: true }) response: Response
+  ) {
+    const result = await this.authService.verifyEmail(
+      verifyEmailDto.email,
+      verifyEmailDto.token
+    );
+
+    // Set refresh token as HTTP-only cookie
+    response.cookie("refresh_token", result.tokens.refreshToken, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+
+    return {
+      message: result.message,
+      user: result.user,
+      accessToken: result.tokens.accessToken,
+    };
+  }
+
+  @Post("resend-verification")
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: "Resend email verification" })
+  @ApiResponse({ status: 200, description: "Verification email sent" })
+  async resendVerification(
+    @Body() resendVerificationDto: ResendVerificationDto
+  ) {
+    return this.authService.resendVerificationEmail(
+      resendVerificationDto.email
+    );
   }
 
   @Get("google")

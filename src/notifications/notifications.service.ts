@@ -10,14 +10,33 @@ export class NotificationsService {
   // private twilioClient: Twilio;
 
   constructor(private configService: ConfigService) {
-    // Initialize email transporter
+    // Initialize email transporter with enhanced configuration
+    console.log(
+      "this.configService.get<string>('SMTP_HOST')",
+      this.configService.get<string>("SMTP_HOST")
+    );
+    console.log(
+      "this.configService.get<number>('SMTP_PORT')",
+      this.configService.get<number>("SMTP_PORT")
+    );
+    console.log(
+      "this.configService.get<string>('SMTP_USER')",
+      this.configService.get<string>("SMTP_USER")
+    );
+    console.log(
+      "this.configService.get<string>('SMTP_PASS')",
+      this.configService.get<string>("SMTP_PASS")
+    );
     this.transporter = nodemailer.createTransport({
-      host: this.configService.get<string>("SMTP_HOST"),
+      service: "gmail", // Use Gmail service for better compatibility
       port: this.configService.get<number>("SMTP_PORT"),
-      secure: false,
+      secure: false, // true for 465, false for other ports
       auth: {
         user: this.configService.get<string>("SMTP_USER"),
         pass: this.configService.get<string>("SMTP_PASS"),
+      },
+      tls: {
+        rejectUnauthorized: false, // Allow self-signed certificates
       },
     });
 
@@ -28,26 +47,194 @@ export class NotificationsService {
     // );
   }
 
-  async sendWelcomeEmail(email: string, firstName: string) {
+  async sendWelcomeEmailWithVerification(
+    email: string,
+    firstName: string,
+    verificationToken: string
+  ) {
     try {
+      const verificationUrl = `${this.configService.get<string>("FRONTEND_URL")}/verify-email?token=${verificationToken}&email=${email}`;
+
       const mailOptions = {
         from: `${this.configService.get<string>("FROM_NAME")} <${this.configService.get<string>("FROM_EMAIL")}>`,
         to: email,
-        subject: "Welcome to Framely!",
+        subject: "Welcome to Framely! Please verify your email",
         html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h1 style="color: #333;">Welcome to Framely, ${firstName}!</h1>
-            <p>Thank you for joining our community of photo frame enthusiasts.</p>
-            <p>We're excited to help you create beautiful custom frames for your precious memories.</p>
-            <p>Get started by browsing our collection of frames and uploading your favorite photos.</p>
-            <p>Best regards,<br>The Framely Team</p>
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f9f9f9; padding: 20px;">
+            <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+              <div style="text-align: center; margin-bottom: 30px;">
+                <h1 style="color: #2c3e50; margin: 0; font-size: 28px;">Welcome to Framely! 🖼️</h1>
+              </div>
+              
+              <div style="margin-bottom: 30px;">
+                <h2 style="color: #34495e; font-size: 20px;">Hi ${firstName}!</h2>
+                <p style="color: #555; font-size: 16px; line-height: 1.6;">
+                  Thank you for joining our community of photo frame enthusiasts! We're excited to help you create beautiful custom frames for your precious memories.
+                </p>
+              </div>
+
+              <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 30px 0; border-left: 4px solid #3498db;">
+                <h3 style="color: #2c3e50; margin-top: 0; font-size: 18px;">📧 Please verify your email address</h3>
+                <p style="color: #555; margin-bottom: 20px;">
+                  To complete your registration and start using Framely, please verify your email address by clicking the button below:
+                </p>
+                <div style="text-align: center; margin: 25px 0;">
+                  <a href="${verificationUrl}" style="background-color: #3498db; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; display: inline-block; font-weight: bold; font-size: 16px; box-shadow: 0 3px 10px rgba(52, 152, 219, 0.3);">
+                    ✅ Verify Email Address
+                  </a>
+                </div>
+                <p style="color: #777; font-size: 14px; margin-bottom: 0;">
+                  This verification link will expire in 24 hours for security reasons.
+                </p>
+              </div>
+
+              <div style="margin-top: 30px;">
+                <h3 style="color: #2c3e50; font-size: 18px;">🎨 What you can do with Framely:</h3>
+                <ul style="color: #555; padding-left: 20px;">
+                  <li>Create beautiful custom photo frames</li>
+                  <li>Upload and edit your favorite photos</li>
+                  <li>Choose from various frame styles and sizes</li>
+                  <li>Order high-quality prints delivered to your door</li>
+                </ul>
+              </div>
+
+              <div style="border-top: 1px solid #eee; padding-top: 20px; margin-top: 30px;">
+                <p style="color: #777; font-size: 14px; margin-bottom: 10px;">
+                  If you can't click the button above, copy and paste this link into your browser:
+                </p>
+                <p style="color: #3498db; font-size: 14px; word-break: break-all; background-color: #f8f9fa; padding: 10px; border-radius: 4px;">
+                  ${verificationUrl}
+                </p>
+              </div>
+
+              <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+                <p style="color: #555; font-size: 16px; margin: 0;">
+                  Welcome aboard!<br>
+                  <strong>The Framely Team</strong> 📸
+                </p>
+              </div>
+            </div>
           </div>
         `,
       };
 
       await this.transporter.sendMail(mailOptions);
     } catch (error) {
-      console.error("Failed to send welcome email:", error);
+      console.error("Failed to send welcome email with verification:", error);
+    }
+  }
+
+  async sendEmailVerificationOnly(
+    email: string,
+    firstName: string,
+    verificationToken: string
+  ) {
+    try {
+      const verificationUrl = `${this.configService.get<string>("FRONTEND_URL")}/verify-email?token=${verificationToken}&email=${email}`;
+
+      const mailOptions = {
+        from: `${this.configService.get<string>("FROM_NAME")} <${this.configService.get<string>("FROM_EMAIL")}>`,
+        to: email,
+        subject: "Verify your Framely email address",
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f9f9f9; padding: 20px;">
+            <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+              <div style="text-align: center; margin-bottom: 30px;">
+                <h1 style="color: #2c3e50; margin: 0; font-size: 24px;">📧 Email Verification</h1>
+              </div>
+              
+              <div style="margin-bottom: 30px;">
+                <h2 style="color: #34495e; font-size: 18px;">Hi ${firstName}!</h2>
+                <p style="color: #555; font-size: 16px; line-height: 1.6;">
+                  Please verify your email address to complete your account setup and access all Framely features.
+                </p>
+              </div>
+
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${verificationUrl}" style="background-color: #3498db; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; display: inline-block; font-weight: bold; font-size: 16px; box-shadow: 0 3px 10px rgba(52, 152, 219, 0.3);">
+                  ✅ Verify Email Address
+                </a>
+              </div>
+
+              <div style="background-color: #f8f9fa; padding: 15px; border-radius: 8px; margin: 20px 0;">
+                <p style="color: #777; font-size: 14px; margin: 0;">
+                  This verification link will expire in 24 hours for security reasons.
+                </p>
+              </div>
+
+              <div style="border-top: 1px solid #eee; padding-top: 20px; margin-top: 30px;">
+                <p style="color: #777; font-size: 14px; margin-bottom: 10px;">
+                  If you can't click the button above, copy and paste this link into your browser:
+                </p>
+                <p style="color: #3498db; font-size: 14px; word-break: break-all; background-color: #f8f9fa; padding: 10px; border-radius: 4px;">
+                  ${verificationUrl}
+                </p>
+              </div>
+
+              <div style="text-align: center; margin-top: 30px;">
+                <p style="color: #555; font-size: 14px; margin: 0;">
+                  Best regards,<br>
+                  <strong>The Framely Team</strong>
+                </p>
+              </div>
+            </div>
+          </div>
+        `,
+      };
+
+      await this.transporter.sendMail(mailOptions);
+    } catch (error) {
+      console.error("Failed to send email verification:", error);
+    }
+  }
+
+  async sendEmailVerificationSuccess(email: string, firstName: string) {
+    try {
+      const mailOptions = {
+        from: `${this.configService.get<string>("FROM_NAME")} <${this.configService.get<string>("FROM_EMAIL")}>`,
+        to: email,
+        subject: "Email verified successfully! 🎉",
+        html: `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f9f9f9; padding: 20px;">
+            <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
+              <div style="text-align: center; margin-bottom: 30px;">
+                <h1 style="color: #27ae60; margin: 0; font-size: 28px;">🎉 Email Verified!</h1>
+              </div>
+              
+              <div style="margin-bottom: 30px;">
+                <h2 style="color: #34495e; font-size: 20px;">Congratulations ${firstName}!</h2>
+                <p style="color: #555; font-size: 16px; line-height: 1.6;">
+                  Your email has been successfully verified! You now have full access to all Framely features.
+                </p>
+              </div>
+
+              <div style="background-color: #d5f4e6; padding: 20px; border-radius: 8px; margin: 30px 0; border-left: 4px solid #27ae60;">
+                <h3 style="color: #1e8449; margin-top: 0; font-size: 18px;">🚀 You're all set!</h3>
+                <p style="color: #1e8449; margin-bottom: 0;">
+                  Start exploring our collection and create your first custom photo frame today!
+                </p>
+              </div>
+
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${this.configService.get<string>("FRONTEND_URL")}" style="background-color: #27ae60; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; display: inline-block; font-weight: bold; font-size: 16px; box-shadow: 0 3px 10px rgba(39, 174, 96, 0.3);">
+                  🖼️ Start Creating Frames
+                </a>
+              </div>
+
+              <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
+                <p style="color: #555; font-size: 16px; margin: 0;">
+                  Happy framing!<br>
+                  <strong>The Framely Team</strong> 📸
+                </p>
+              </div>
+            </div>
+          </div>
+        `,
+      };
+
+      await this.transporter.sendMail(mailOptions);
+    } catch (error) {
+      console.error("Failed to send email verification success:", error);
     }
   }
 

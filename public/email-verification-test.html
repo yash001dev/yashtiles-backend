@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Verification Test - Framely</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input[type="email"], input[type="password"], input[type="text"] {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #3498db;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin-right: 10px;
+            margin-bottom: 10px;
+        }
+        button:hover {
+            background-color: #2980b9;
+        }
+        .success {
+            background-color: #d4edda;
+            color: #155724;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .error {
+            background-color: #f8d7da;
+            color: #721c24;
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .section {
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid #eee;
+        }
+        h2 {
+            color: #2c3e50;
+        }
+        .response {
+            background-color: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 10px;
+            white-space: pre-wrap;
+            font-family: monospace;
+        }
+        .instructions {
+            background-color: #e7f3ff;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border-left: 4px solid #3498db;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🖼️ Framely - Email Verification Test</h1>
+        
+        <div class="instructions">
+            <h3>📧 Test Email Verification Flow</h3>
+            <p><strong>Steps to test:</strong></p>
+            <ol>
+                <li>Register a new user using the form below</li>
+                <li>Check your email for the verification link</li>
+                <li>Use the verification form or click the email link</li>
+                <li>Try logging in with verified account</li>
+            </ol>
+        </div>
+
+        <!-- Registration Section -->
+        <div class="section">
+            <h2>1. Register New User</h2>
+            <form id="registerForm">
+                <div class="form-group">
+                    <label for="firstName">First Name:</label>
+                    <input type="text" id="firstName" name="firstName" required>
+                </div>
+                <div class="form-group">
+                    <label for="lastName">Last Name:</label>
+                    <input type="text" id="lastName" name="lastName" required>
+                </div>
+                <div class="form-group">
+                    <label for="regEmail">Email:</label>
+                    <input type="email" id="regEmail" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="regPassword">Password:</label>
+                    <input type="password" id="regPassword" name="password" required>
+                </div>
+                <button type="submit">Register</button>
+            </form>
+            <div id="registerResponse" class="response" style="display: none;"></div>
+        </div>
+
+        <!-- Email Verification Section -->
+        <div class="section">
+            <h2>2. Verify Email</h2>
+            <form id="verifyForm">
+                <div class="form-group">
+                    <label for="verifyEmail">Email:</label>
+                    <input type="email" id="verifyEmail" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="verifyToken">Verification Token:</label>
+                    <input type="text" id="verifyToken" name="token" required placeholder="Token from email or URL">
+                </div>
+                <button type="submit">Verify Email</button>
+            </form>
+            <div id="verifyResponse" class="response" style="display: none;"></div>
+        </div>
+
+        <!-- Resend Verification Section -->
+        <div class="section">
+            <h2>3. Resend Verification Email</h2>
+            <form id="resendForm">
+                <div class="form-group">
+                    <label for="resendEmail">Email:</label>
+                    <input type="email" id="resendEmail" name="email" required>
+                </div>
+                <button type="submit">Resend Verification</button>
+            </form>
+            <div id="resendResponse" class="response" style="display: none;"></div>
+        </div>
+
+        <!-- Login Section -->
+        <div class="section">
+            <h2>4. Login (Only works after email verification)</h2>
+            <form id="loginForm">
+                <div class="form-group">
+                    <label for="loginEmail">Email:</label>
+                    <input type="email" id="loginEmail" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="loginPassword">Password:</label>
+                    <input type="password" id="loginPassword" name="password" required>
+                </div>
+                <button type="submit">Login</button>
+            </form>
+            <div id="loginResponse" class="response" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000/api/v1/auth';
+
+        // Helper function to make API calls
+        async function makeRequest(url, method, data = null) {
+            const options = {
+                method,
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+            };
+
+            if (data) {
+                options.body = JSON.stringify(data);
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}${url}`, options);
+                const result = await response.json();
+                return { status: response.status, data: result };
+            } catch (error) {
+                return { status: 500, data: { message: error.message } };
+            }
+        }
+
+        // Register form handler
+        document.getElementById('registerForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData);
+            
+            const result = await makeRequest('/register', 'POST', data);
+            const responseDiv = document.getElementById('registerResponse');
+            responseDiv.style.display = 'block';
+            responseDiv.textContent = JSON.stringify(result, null, 2);
+            responseDiv.className = 'response ' + (result.status === 201 ? 'success' : 'error');
+
+            // Pre-fill other forms with the email
+            if (result.status === 201) {
+                document.getElementById('verifyEmail').value = data.email;
+                document.getElementById('resendEmail').value = data.email;
+                document.getElementById('loginEmail').value = data.email;
+            }
+        });
+
+        // Verify email form handler
+        document.getElementById('verifyForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData);
+            
+            const result = await makeRequest('/verify-email', 'POST', data);
+            const responseDiv = document.getElementById('verifyResponse');
+            responseDiv.style.display = 'block';
+            responseDiv.textContent = JSON.stringify(result, null, 2);
+            responseDiv.className = 'response ' + (result.status === 200 ? 'success' : 'error');
+        });
+
+        // Resend verification form handler
+        document.getElementById('resendForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData);
+            
+            const result = await makeRequest('/resend-verification', 'POST', data);
+            const responseDiv = document.getElementById('resendResponse');
+            responseDiv.style.display = 'block';
+            responseDiv.textContent = JSON.stringify(result, null, 2);
+            responseDiv.className = 'response ' + (result.status === 200 ? 'success' : 'error');
+        });
+
+        // Login form handler
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData);
+            
+            const result = await makeRequest('/login', 'POST', data);
+            const responseDiv = document.getElementById('loginResponse');
+            responseDiv.style.display = 'block';
+            responseDiv.textContent = JSON.stringify(result, null, 2);
+            responseDiv.className = 'response ' + (result.status === 200 ? 'success' : 'error');
+        });
+
+        // Auto-fill verification token from URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+        const email = urlParams.get('email');
+        
+        if (token && email) {
+            document.getElementById('verifyEmail').value = email;
+            document.getElementById('verifyToken').value = token;
+        }
+    </script>
+</body>
+</html>
