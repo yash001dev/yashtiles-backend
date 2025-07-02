@@ -76,6 +76,10 @@ export class UsersService {
     return this.userModel.findOne({ email }).exec();
   }
 
+  async findByGoogleId(googleId: string): Promise<UserDocument | null> {
+    return this.userModel.findOne({ googleId }).exec();
+  }
+
   async update(
     id: string,
     updateUserDto: UpdateUserDto

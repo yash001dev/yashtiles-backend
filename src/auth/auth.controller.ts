@@ -180,10 +180,11 @@ export class AuthController {
       maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 
-    return {
-      user: result.user,
-      accessToken: result.tokens.accessToken,
-    };
+    // Redirect to frontend with success
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3001";
+    const redirectUrl = `${frontendUrl}/auth/google/success?token=${result.tokens.accessToken}`;
+
+    response.redirect(redirectUrl);
   }
 
   @Post("google/login")

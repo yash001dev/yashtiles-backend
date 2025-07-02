@@ -1,0 +1,392 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Google Authentication Test - Framely</title>
+    <script src="https://accounts.google.com/gsi/client" async defer></script>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        
+        .section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        
+        .section h3 {
+            margin-top: 0;
+            color: #333;
+        }
+        
+        .google-btn {
+            display: inline-flex;
+            align-items: center;
+            background: #4285f4;
+            color: white;
+            border: none;
+            padding: 12px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            margin: 10px 5px;
+            text-decoration: none;
+        }
+        
+        .google-btn:hover {
+            background: #357ae8;
+        }
+        
+        .google-btn img {
+            width: 18px;
+            height: 18px;
+            margin-right: 8px;
+        }
+        
+        .status {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        
+        .success {
+            background: #d4edda;
+            color: #155724;
+            border: 1px solid #c3e6cb;
+        }
+        
+        .error {
+            background: #f8d7da;
+            color: #721c24;
+            border: 1px solid #f5c6cb;
+        }
+        
+        .info {
+            background: #d1ecf1;
+            color: #0c5460;
+            border: 1px solid #bee5eb;
+        }
+        
+        .user-info {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+        
+        .user-info img {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            margin-right: 15px;
+            vertical-align: middle;
+        }
+        
+        pre {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 4px;
+            overflow-x: auto;
+            font-size: 12px;
+        }
+        
+        .logout-btn {
+            background: #dc3545;
+            color: white;
+            border: none;
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-left: 10px;
+        }
+        
+        .logout-btn:hover {
+            background: #c82333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Google Authentication Test - Framely</h1>
+        
+        <!-- Method 1: OAuth Redirect Flow -->
+        <div class="section">
+            <h3>Method 1: OAuth Redirect Flow</h3>
+            <p>This redirects you to Google's sign-in page and back to your backend.</p>
+            <a href="http://localhost:3000/api/v1/auth/google" class="google-btn">
+                <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google">
+                Sign in with Google (Redirect)
+            </a>
+            <div class="status info">
+                <strong>Note:</strong> This will redirect you away from this page.
+            </div>
+        </div>
+
+        <!-- Method 2: JavaScript SDK -->
+        <div class="section">
+            <h3>Method 2: Google Sign-In JavaScript SDK</h3>
+            <p>This uses Google's JavaScript library to authenticate without leaving the page.</p>
+            <div id="google-signin-button"></div>
+            <div id="js-status"></div>
+        </div>
+
+        <!-- Method 3: One Tap -->
+        <div class="section">
+            <h3>Method 3: One Tap Sign-In</h3>
+            <p>Google's One Tap feature will automatically show a sign-in prompt.</p>
+            <button onclick="showOneTap()" class="google-btn">
+                Show One Tap Sign-In
+            </button>
+            <div id="onetap-status"></div>
+        </div>
+
+        <!-- User Information Display -->
+        <div class="section" id="user-section" style="display: none;">
+            <h3>Logged In User Information</h3>
+            <div id="user-info"></div>
+            <button onclick="logout()" class="logout-btn">Logout</button>
+        </div>
+
+        <!-- Token Display -->
+        <div class="section" id="token-section" style="display: none;">
+            <h3>Authentication Tokens</h3>
+            <div id="token-info"></div>
+        </div>
+
+        <!-- API Test -->
+        <div class="section">
+            <h3>API Test</h3>
+            <p>Test authenticated API calls:</p>
+            <button onclick="testProtectedRoute()" class="google-btn" style="background: #28a745;">
+                Test Protected Route
+            </button>
+            <div id="api-status"></div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = 'http://localhost:3000/api/v1';
+        const GOOGLE_CLIENT_ID = '829564712055-nv247pdurodv3atd4jv24rsaom8qsscm.apps.googleusercontent.com';
+
+        // Initialize Google Sign-In when page loads
+        window.onload = function() {
+            initializeGoogleSignIn();
+            checkExistingAuth();
+            handleGoogleCallback();
+        };
+
+        function initializeGoogleSignIn() {
+            google.accounts.id.initialize({
+                client_id: GOOGLE_CLIENT_ID,
+                callback: handleCredentialResponse,
+                auto_select: false,
+                cancel_on_tap_outside: true
+            });
+
+            // Render the sign-in button
+            google.accounts.id.renderButton(
+                document.getElementById('google-signin-button'),
+                {
+                    theme: 'outline',
+                    size: 'large',
+                    width: 250,
+                    text: 'signin_with',
+                    shape: 'rectangular'
+                }
+            );
+        }
+
+        function showOneTap() {
+            google.accounts.id.prompt((notification) => {
+                const status = document.getElementById('onetap-status');
+                if (notification.isNotDisplayed() || notification.isSkippedMoment()) {
+                    status.innerHTML = `<div class="status info">One Tap not shown: ${notification.getNotDisplayedReason() || notification.getSkippedReason()}</div>`;
+                } else {
+                    status.innerHTML = `<div class="status info">One Tap displayed</div>`;
+                }
+            });
+        }
+
+        async function handleCredentialResponse(response) {
+            const status = document.getElementById('js-status');
+            status.innerHTML = '<div class="status info">Processing Google sign-in...</div>';
+
+            try {
+                // Decode the JWT credential to get user info
+                const payload = JSON.parse(atob(response.credential.split('.')[1]));
+                
+                // Send to your backend
+                const result = await fetch(`${API_BASE}/auth/google/login`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    credentials: 'include',
+                    body: JSON.stringify({
+                        email: payload.email,
+                        firstName: payload.given_name,
+                        lastName: payload.family_name,
+                        googleId: payload.sub,
+                        avatar: payload.picture,
+                        accessToken: response.credential // Send the credential as access token
+                    })
+                });
+
+                const data = await result.json();
+
+                if (result.ok && data.accessToken) {
+                    localStorage.setItem('accessToken', data.accessToken);
+                    localStorage.setItem('user', JSON.stringify(data.user));
+                    
+                    status.innerHTML = '<div class="status success">✅ Successfully signed in with Google!</div>';
+                    displayUserInfo(data.user, data.accessToken);
+                } else {
+                    throw new Error(data.message || 'Sign-in failed');
+                }
+            } catch (error) {
+                console.error('Google sign-in error:', error);
+                status.innerHTML = `<div class="status error">❌ Sign-in failed: ${error.message}</div>`;
+            }
+        }
+
+        function checkExistingAuth() {
+            const token = localStorage.getItem('accessToken');
+            const user = localStorage.getItem('user');
+            
+            if (token && user) {
+                try {
+                    const userData = JSON.parse(user);
+                    displayUserInfo(userData, token);
+                } catch (error) {
+                    console.error('Error parsing stored user data:', error);
+                    localStorage.removeItem('accessToken');
+                    localStorage.removeItem('user');
+                }
+            }
+        }
+
+        function handleGoogleCallback() {
+            const urlParams = new URLSearchParams(window.location.search);
+            const token = urlParams.get('token');
+            
+            if (token) {
+                localStorage.setItem('accessToken', token);
+                // Remove token from URL
+                window.history.replaceState({}, document.title, window.location.pathname);
+                
+                // You might want to fetch user info with this token
+                fetchUserInfo(token);
+            }
+        }
+
+        async function fetchUserInfo(token) {
+            try {
+                const response = await fetch(`${API_BASE}/users/profile`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                if (response.ok) {
+                    const user = await response.json();
+                    localStorage.setItem('user', JSON.stringify(user));
+                    displayUserInfo(user, token);
+                }
+            } catch (error) {
+                console.error('Error fetching user info:', error);
+            }
+        }
+
+        function displayUserInfo(user, token) {
+            const userSection = document.getElementById('user-section');
+            const userInfo = document.getElementById('user-info');
+            const tokenSection = document.getElementById('token-section');
+            const tokenInfo = document.getElementById('token-info');
+            
+            userSection.style.display = 'block';
+            tokenSection.style.display = 'block';
+            
+            userInfo.innerHTML = `
+                <div class="user-info">
+                    ${user.avatar ? `<img src="${user.avatar}" alt="User Avatar">` : ''}
+                    <div>
+                        <strong>${user.firstName} ${user.lastName}</strong><br>
+                        <span>${user.email}</span><br>
+                        <small>Role: ${user.role} | Verified: ${user.isEmailVerified ? '✅' : '❌'}</small>
+                    </div>
+                </div>
+            `;
+            
+            tokenInfo.innerHTML = `
+                <pre>${token.substring(0, 50)}...${token.substring(token.length - 10)}</pre>
+                <small>Token stored in localStorage</small>
+            `;
+        }
+
+        function logout() {
+            localStorage.removeItem('accessToken');
+            localStorage.removeItem('user');
+            
+            document.getElementById('user-section').style.display = 'none';
+            document.getElementById('token-section').style.display = 'none';
+            
+            // Sign out from Google
+            google.accounts.id.disableAutoSelect();
+            
+            // Clear status messages
+            document.getElementById('js-status').innerHTML = '';
+            document.getElementById('api-status').innerHTML = '';
+            
+            alert('Logged out successfully!');
+        }
+
+        async function testProtectedRoute() {
+            const token = localStorage.getItem('accessToken');
+            const status = document.getElementById('api-status');
+            
+            if (!token) {
+                status.innerHTML = '<div class="status error">❌ No access token. Please sign in first.</div>';
+                return;
+            }
+            
+            status.innerHTML = '<div class="status info">Testing protected route...</div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/users/profile`, {
+                    headers: {
+                        'Authorization': `Bearer ${token}`
+                    }
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    status.innerHTML = `
+                        <div class="status success">✅ Protected route works!</div>
+                        <pre>${JSON.stringify(data, null, 2)}</pre>
+                    `;
+                } else {
+                    status.innerHTML = `<div class="status error">❌ Protected route failed: ${data.message}</div>`;
+                }
+            } catch (error) {
+                status.innerHTML = `<div class="status error">❌ API error: ${error.message}</div>`;
+            }
+        }
+    </script>
+</body>
+</html>

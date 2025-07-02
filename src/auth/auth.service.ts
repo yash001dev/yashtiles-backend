@@ -260,15 +260,28 @@ export class AuthService {
   }
 
   async googleLogin(googleLoginDto: GoogleLoginDto) {
-    const { email, firstName, lastName, avatar, accessToken, refreshToken } =
-      googleLoginDto;
+    const {
+      email,
+      firstName,
+      lastName,
+      avatar,
+      accessToken,
+      refreshToken,
+      googleId,
+    } = googleLoginDto;
 
-    // Check if user already exists
+    // Check if user already exists by email or Google ID
     let user = await this.usersService.findByEmail(email);
 
+    // If not found by email, try to find by Google ID
+    if (!user && googleId) {
+      user = await this.usersService.findByGoogleId(googleId);
+    }
+
     if (user) {
-      // Update existing user's Google tokens
+      // Update existing user's Google tokens and info
       await this.usersService.update(user._id.toString(), {
+        googleId: googleId || user.googleId,
         googleAccessToken: accessToken,
         googleRefreshToken: refreshToken,
         avatar: avatar || user.avatar,
@@ -282,6 +295,7 @@ export class AuthService {
         email,
         password: "", // No password for Google users
         avatar,
+        googleId,
         isEmailVerified: true,
         googleAccessToken: accessToken,
         googleRefreshToken: refreshToken,
@@ -333,6 +347,7 @@ export class AuthService {
       email: user.email,
       firstName: user.firstName,
       lastName: user.lastName,
+      googleId: user.googleId,
       avatar: user.avatar,
       accessToken: user.accessToken,
       refreshToken: user.refreshToken,

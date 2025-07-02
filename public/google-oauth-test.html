@@ -1,44 +1,356 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Google OAuth Test</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Framely - Google OAuth Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            color: #333;
+        }
+        .container {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #4285f4;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+        .auth-section {
+            margin: 30px 0;
+            padding: 25px;
+            border: 2px solid #f0f0f0;
+            border-radius: 15px;
+            background: #fafafa;
+        }
+        .auth-section h2 {
+            margin-top: 0;
+            color: #333;
+            border-bottom: 2px solid #4285f4;
+            padding-bottom: 10px;
+        }
+        .google-btn {
+            display: inline-flex;
+            align-items: center;
+            background: #4285f4;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            cursor: pointer;
+            margin: 10px 0;
+        }
+        .google-btn:hover {
+            background: #3367d6;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(66, 133, 244, 0.3);
+        }
+        .form-section {
+            margin: 20px 0;
+        }
+        .form-section label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: #555;
+        }
+        .form-section input {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.3s ease;
+            box-sizing: border-box;
+        }
+        .form-section input:focus {
+            outline: none;
+            border-color: #4285f4;
+        }
+        .btn {
+            background: #34a853;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: 500;
+            transition: all 0.3s ease;
+            margin: 10px 5px;
+        }
+        .btn:hover {
+            background: #2d8b47;
+            transform: translateY(-2px);
+        }
+        .response {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 8px;
+            background: #f8f9fa;
+            border-left: 4px solid #4285f4;
+            white-space: pre-wrap;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .success { border-left-color: #34a853; }
+        .error { border-left-color: #ea4335; }
+        .feature-list {
+            background: #e8f5e8;
+            padding: 20px;
+            border-radius: 10px;
+            margin: 20px 0;
+        }
+        .feature-list ul {
+            margin: 0;
+            padding-left: 20px;
+        }
+        .feature-list li {
+            margin: 8px 0;
+            color: #2d5a2d;
+        }
+    </style>
 </head>
 <body>
-    <h1>Google OAuth Authentication Test</h1>
-    
-    <h2>Option 1: Server-side OAuth Flow</h2>
-    <a href="/api/v1/auth/google">Login with Google (Server-side)</a>
-    
-    <h2>Option 2: Client-side OAuth (for frontend apps)</h2>
-    <p>Use the /api/v1/auth/google/login endpoint with the Google access token from your frontend</p>
-    
-    <div id="google-signin-button"></div>
-    
+    <div class="container">
+        <h1>🖼️ Framely Authentication Test</h1>
+        
+        <div class="feature-list">
+            <h3>✨ Features Implemented:</h3>
+            <ul>
+                <li>✅ Google OAuth 2.0 Authentication</li>
+                <li>✅ Email Verification with Welcome Email</li>
+                <li>✅ JWT Token Management</li>
+                <li>✅ Refresh Token Support</li>
+                <li>✅ Regular Registration & Login</li>
+                <li>✅ Password Reset Functionality</li>
+            </ul>
+        </div>
+
+        <!-- Google OAuth Section -->
+        <div class="auth-section">
+            <h2>🔐 Google OAuth Authentication</h2>
+            <p>Click the button below to authenticate with Google:</p>
+            
+            <a href="http://localhost:3000/api/v1/auth/google" class="google-btn">
+                📱 Sign in with Google
+            </a>
+            
+            <div id="oauth-response" class="response" style="display: none;"></div>
+        </div>
+
+        <!-- Manual Google Login Section -->
+        <div class="auth-section">
+            <h2>🔗 Manual Google Token Login</h2>
+            <p>For testing purposes, you can manually provide Google user data:</p>
+            
+            <div class="form-section">
+                <label>Email:</label>
+                <input type="email" id="google-email" placeholder="user@gmail.com">
+            </div>
+            
+            <div class="form-section">
+                <label>First Name:</label>
+                <input type="text" id="google-firstname" placeholder="John">
+            </div>
+            
+            <div class="form-section">
+                <label>Last Name:</label>
+                <input type="text" id="google-lastname" placeholder="Doe">
+            </div>
+            
+            <div class="form-section">
+                <label>Google Access Token:</label>
+                <input type="text" id="google-token" placeholder="ya29.a0AfH6SMC...">
+            </div>
+            
+            <div class="form-section">
+                <label>Avatar URL (optional):</label>
+                <input type="url" id="google-avatar" placeholder="https://lh3.googleusercontent.com/...">
+            </div>
+            
+            <button class="btn" onclick="testGoogleLogin()">Test Google Login</button>
+            
+            <div id="google-response" class="response" style="display: none;"></div>
+        </div>
+
+        <!-- Regular Authentication Section -->
+        <div class="auth-section">
+            <h2>📧 Email Authentication</h2>
+            
+            <h3>Register New User</h3>
+            <div class="form-section">
+                <label>First Name:</label>
+                <input type="text" id="reg-firstname" placeholder="John">
+            </div>
+            <div class="form-section">
+                <label>Last Name:</label>
+                <input type="text" id="reg-lastname" placeholder="Doe">
+            </div>
+            <div class="form-section">
+                <label>Email:</label>
+                <input type="email" id="reg-email" placeholder="john@example.com">
+            </div>
+            <div class="form-section">
+                <label>Password:</label>
+                <input type="password" id="reg-password" placeholder="Password">
+            </div>
+            <button class="btn" onclick="testRegister()">Register</button>
+            
+            <h3>Login</h3>
+            <div class="form-section">
+                <label>Email:</label>
+                <input type="email" id="login-email" placeholder="john@example.com">
+            </div>
+            <div class="form-section">
+                <label>Password:</label>
+                <input type="password" id="login-password" placeholder="Password">
+            </div>
+            <button class="btn" onclick="testLogin()">Login</button>
+            
+            <h3>Email Verification</h3>
+            <div class="form-section">
+                <label>Email:</label>
+                <input type="email" id="verify-email" placeholder="john@example.com">
+            </div>
+            <div class="form-section">
+                <label>Verification Token:</label>
+                <input type="text" id="verify-token" placeholder="Token from email">
+            </div>
+            <button class="btn" onclick="testVerifyEmail()">Verify Email</button>
+            <button class="btn" onclick="testResendVerification()">Resend Verification</button>
+            
+            <div id="auth-response" class="response" style="display: none;"></div>
+        </div>
+    </div>
+
     <script>
-        // Example frontend implementation
-        function handleGoogleSignIn(googleResponse) {
-            // This would be implemented in your frontend
-            fetch('/api/v1/auth/google/login', {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                },
-                body: JSON.stringify({
-                    accessToken: googleResponse.access_token,
-                    email: googleResponse.email,
-                    firstName: googleResponse.given_name,
-                    lastName: googleResponse.family_name,
-                    avatar: googleResponse.picture
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                console.log('Success:', data);
-                // Handle successful login
-            })
-            .catch((error) => {
-                console.error('Error:', error);
-            });
+        // Check URL for Google auth success
+        const urlParams = new URLSearchParams(window.location.search);
+        const token = urlParams.get('token');
+        
+        if (token) {
+            document.getElementById('oauth-response').style.display = 'block';
+            document.getElementById('oauth-response').className = 'response success';
+            document.getElementById('oauth-response').textContent = `Google Authentication Successful!\nAccess Token: ${token}`;
+        }
+
+        async function makeRequest(url, method = 'GET', body = null) {
+            try {
+                const config = {
+                    method,
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                };
+                
+                if (body) {
+                    config.body = JSON.stringify(body);
+                }
+                
+                const response = await fetch(`http://localhost:3000/api/v1${url}`, config);
+                const data = await response.json();
+                
+                return {
+                    status: response.status,
+                    data
+                };
+            } catch (error) {
+                return {
+                    status: 500,
+                    data: { message: error.message }
+                };
+            }
+        }
+
+        async function testGoogleLogin() {
+            const body = {
+                email: document.getElementById('google-email').value,
+                firstName: document.getElementById('google-firstname').value,
+                lastName: document.getElementById('google-lastname').value,
+                accessToken: document.getElementById('google-token').value,
+                avatar: document.getElementById('google-avatar').value || undefined
+            };
+            
+            const result = await makeRequest('/auth/google/login', 'POST', body);
+            
+            const responseDiv = document.getElementById('google-response');
+            responseDiv.style.display = 'block';
+            responseDiv.className = result.status === 200 ? 'response success' : 'response error';
+            responseDiv.textContent = JSON.stringify(result, null, 2);
+        }
+
+        async function testRegister() {
+            const body = {
+                firstName: document.getElementById('reg-firstname').value,
+                lastName: document.getElementById('reg-lastname').value,
+                email: document.getElementById('reg-email').value,
+                password: document.getElementById('reg-password').value
+            };
+            
+            const result = await makeRequest('/auth/register', 'POST', body);
+            
+            const responseDiv = document.getElementById('auth-response');
+            responseDiv.style.display = 'block';
+            responseDiv.className = result.status === 201 ? 'response success' : 'response error';
+            responseDiv.textContent = JSON.stringify(result, null, 2);
+        }
+
+        async function testLogin() {
+            const body = {
+                email: document.getElementById('login-email').value,
+                password: document.getElementById('login-password').value
+            };
+            
+            const result = await makeRequest('/auth/login', 'POST', body);
+            
+            const responseDiv = document.getElementById('auth-response');
+            responseDiv.style.display = 'block';
+            responseDiv.className = result.status === 200 ? 'response success' : 'response error';
+            responseDiv.textContent = JSON.stringify(result, null, 2);
+        }
+
+        async function testVerifyEmail() {
+            const body = {
+                email: document.getElementById('verify-email').value,
+                token: document.getElementById('verify-token').value
+            };
+            
+            const result = await makeRequest('/auth/verify-email', 'POST', body);
+            
+            const responseDiv = document.getElementById('auth-response');
+            responseDiv.style.display = 'block';
+            responseDiv.className = result.status === 200 ? 'response success' : 'response error';
+            responseDiv.textContent = JSON.stringify(result, null, 2);
+        }
+
+        async function testResendVerification() {
+            const body = {
+                email: document.getElementById('verify-email').value
+            };
+            
+            const result = await makeRequest('/auth/resend-verification', 'POST', body);
+            
+            const responseDiv = document.getElementById('auth-response');
+            responseDiv.style.display = 'block';
+            responseDiv.className = result.status === 200 ? 'response success' : 'response error';
+            responseDiv.textContent = JSON.stringify(result, null, 2);
         }
     </script>
 </body>
