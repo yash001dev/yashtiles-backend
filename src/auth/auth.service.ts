@@ -291,7 +291,7 @@ export class AuthService {
       // Create new user with Google data
       const createUserDto = {
         firstName,
-        lastName: lastName || '', // Handle optional lastName, default to empty string
+        lastName: lastName ||  "", // Handle optional lastName, default to empty string
         email,
         password: "", // No password for Google users
         avatar,
