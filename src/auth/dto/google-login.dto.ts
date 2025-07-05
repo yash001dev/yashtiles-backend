@@ -14,9 +14,10 @@ export class GoogleLoginDto {
   @IsString()
   firstName: string;
 
-  @ApiProperty({ description: "User last name from Google" })
+  @ApiPropertyOptional({ description: "User last name from Google" })
+  @IsOptional()
   @IsString()
-  lastName: string;
+  lastName?: string;
 
   @ApiPropertyOptional({ description: "Google user ID" })
   @IsOptional()

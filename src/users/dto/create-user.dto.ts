@@ -14,9 +14,10 @@ export class CreateUserDto {
   @IsString()
   firstName: string;
 
-  @ApiProperty({ description: "User last name" })
+  @ApiPropertyOptional({ description: "User last name" })
+  @IsOptional()
   @IsString()
-  lastName: string;
+  lastName?: string;
 
   @ApiProperty({ description: "User email address" })
   @IsEmail()
