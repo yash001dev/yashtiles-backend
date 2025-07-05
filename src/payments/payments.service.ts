@@ -5,7 +5,11 @@ import Razorpay from "razorpay";
 import { CreatePaymentIntentDto } from "./dto/create-payment-intent.dto";
 import { VerifyPaymentDto } from "./dto/verify-payment.dto";
 import { OrdersService } from "../orders/orders.service";
-import { PaymentStatus } from "../orders/schemas/order.schema";
+import { PaymentStatus, OrderStatus } from "../orders/schemas/order.schema";
+import * as crypto from 'crypto';
+import { CreateOrderDto } from '../orders/dto/create-order.dto';
+import Payu from 'payu-websdk';
+
 
 @Injectable()
 export class PaymentsService {
@@ -192,5 +196,97 @@ export class PaymentsService {
     } catch (error) {
       throw new BadRequestException(`Webhook error: ${error.message}`);
     }
+  }
+
+  async initiatePayUPayment(body: any) {
+    // Create a pending order before redirecting to PayU
+    let txnid = body.txnid || Math.random().toString(36).substr(2, 12);
+    let amount = body.amount;
+    let productinfo = body.productinfo;
+    let firstname = body.firstname;
+    let email = body.email;
+    let phone = body.phone;
+    let udf1 = body.udf1 || '';
+    let udf2 = body.udf2 || '';
+    let udf3 = body.udf3 || '';
+    let udf4 = body.udf4 || '';
+    let udf5 = body.udf5 || '';
+    let orderId = null;
+    if (body.order) {
+      const orderDto = body.order;
+      // txnid = orderDto.tempTxnId || txnid;
+      amount = orderDto.totalAmount;
+      productinfo = 'FrameIt Custom Frame';
+      firstname = orderDto.shippingAddress.firstName;
+      email = orderDto.shippingAddress.email;
+      phone = orderDto.shippingAddress.phone || body.phone;
+      // Store txnid in orderDto for lookup
+      orderDto.txnid = txnid;
+      // Set status to PENDING
+      orderDto.status = OrderStatus.PENDING;
+      const userId = body.userId || null;
+      const order = await this.ordersService.create(orderDto, userId);
+      orderId = (order as any)._id.toString();
+    }
+    const surl = body.surl;
+    const furl = body.furl;
+    const key = this.configService.get<string>("PAYU_API_KEY");
+    const salt = this.configService.get<string>("PAYU_SALT");
+    const payu = new Payu({ key, salt }, process.env.NODE_ENV === 'production' ? 'PROD' : 'TEST');
+    const paymentParams = {
+      key,
+      txnid,
+      amount,
+      productinfo,
+      firstname,
+      email,
+      phone,
+      surl,
+      furl,
+      udf1,
+      udf2,
+      udf3,
+      udf4,
+      udf5
+    };
+    const paramsHtml = payu.paymentInitiate(paymentParams);
+    // Extract input fields from the HTML form
+    const params: Record<string, string> = {};
+    const inputRegex = /<input[^>]*name=['"]([^'"]+)['"][^>]*value=['"]([^'"]*)['"][^>]*>/g;
+    let match;
+    while ((match = inputRegex.exec(paramsHtml)) !== null) {
+      params[match[1]] = match[2];
+    }
+    return {
+      action: process.env.NODE_ENV === 'production' ? 'https://secure.payu.in/_payment' : 'https://test.payu.in/_payment',
+      params,
+      txnid,
+      orderId
+    };
+  }
+
+  async verifyPayUPayment(txnid: string) {
+    const key = this.configService.get<string>("PAYU_API_KEY");
+    const salt = this.configService.get<string>("PAYU_SALT");
+    const payu = new Payu({ key, salt }, 'TEST');
+    return payu.verifyPayment(txnid);
+  }
+
+  async handlePayUCallback(body: any) {
+    // Validate hash and check status
+    const key = this.configService.get<string>("PAYU_API_KEY");
+    const salt = this.configService.get<string>("PAYU_SALT");
+    const payu = new Payu({ key, salt }, 'TEST');
+    const isValid = payu.hasher.validateResponseHash(body);
+    if (isValid && body.status === 'success') {
+      // Find the order by txnid and update status to CONFIRMED
+      const txnid = body.txnid;
+      let order = await this.ordersService.getOrderByTxnId(txnid);
+      if (order && order._id) {
+        await this.ordersService.updateStatus(order._id.toString(), { status: OrderStatus.CONFIRMED });
+      }
+      return { success: true, status: body.status };
+    }
+    return { success: false, status: body.status };
   }
 }

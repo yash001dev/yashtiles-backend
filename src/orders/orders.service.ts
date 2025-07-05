@@ -32,10 +32,9 @@ export class OrdersService {
         },
       ],
     });
-
     const savedOrder = await order.save();
-    await savedOrder.populate("items.productId");
-
+    //Find refrence of productId in products collection and add it to the order
+    // await savedOrder.populate("items.productId");
     // Send order confirmation email
     await this.notificationsService.sendOrderConfirmationEmail(
       savedOrder.shippingAddress.email,
@@ -196,5 +195,9 @@ export class OrdersService {
 
     const sequence = (count + 1).toString().padStart(4, "0");
     return `FR${year}${month}${day}${sequence}`;
+  }
+
+  async getOrderByTxnId(txnid: string): Promise<OrderDocument | null> {
+    return this.orderModel.findOne({ txnid }).exec();
   }
 }

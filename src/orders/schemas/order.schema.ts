@@ -28,7 +28,7 @@ export class Order {
   orderNumber: string;
 
   @Prop([{
-    productId: { type: Types.ObjectId, ref: 'Product', required: true },
+    productId: { type: String, ref: 'Product', required: true },
     quantity: { type: Number, required: true, min: 1 },
     price: { type: Number, required: true },
     size: { type: String, required: true },
@@ -37,13 +37,18 @@ export class Order {
     notes: String,
   }])
   items: Array<{
-    productId: Types.ObjectId;
+    productId: String;
     quantity: number;
     price: number;
     size: string;
     frameType: string;
     imageUrl: string;
     notes?: string;
+    frameColor?: string;
+    borderColor?: string;
+    borderWidth?: string;
+    material?: string;
+    effect?: string;
   }>;
 
   @Prop({ required: true })
@@ -54,6 +59,9 @@ export class Order {
 
   @Prop({ default: 0 })
   taxAmount: number;
+
+  @Prop({ default: 0 })
+  txnid: number;
 
   @Prop({ type: String, enum: OrderStatus, default: OrderStatus.PENDING })
   status: OrderStatus;
