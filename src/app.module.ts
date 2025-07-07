@@ -1,28 +1,29 @@
-import { Module } from '@nestjs/common';
-import { ConfigModule, ConfigService } from '@nestjs/config';
-import { MongooseModule } from '@nestjs/mongoose';
-import { ThrottlerModule } from '@nestjs/throttler';
-import { ScheduleModule } from '@nestjs/schedule';
+import { Module } from "@nestjs/common";
+import { ConfigModule, ConfigService } from "@nestjs/config";
+import { MongooseModule } from "@nestjs/mongoose";
+import { ThrottlerModule } from "@nestjs/throttler";
+import { ScheduleModule } from "@nestjs/schedule";
 
-import { AuthModule } from './auth/auth.module';
-import { UsersModule } from './users/users.module';
-import { OrdersModule } from './orders/orders.module';
-import { ProductsModule } from './products/products.module';
-import { PaymentsModule } from './payments/payments.module';
-import { NotificationsModule } from './notifications/notifications.module';
-import { UploadsModule } from './uploads/uploads.module';
-import { AdminModule } from './admin/admin.module';
+import { AuthModule } from "./auth/auth.module";
+import { UsersModule } from "./users/users.module";
+import { OrdersModule } from "./orders/orders.module";
+import { ProductsModule } from "./products/products.module";
+import { PaymentsModule } from "./payments/payments.module";
+import { NotificationsModule } from "./notifications/notifications.module";
+import { UploadsModule } from "./uploads/uploads.module";
+import { AdminModule } from "./admin/admin.module";
+import { S3Module } from "./s3/s3.module";
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
-      envFilePath: '.env',
+      envFilePath: ".env",
     }),
     MongooseModule.forRootAsync({
       imports: [ConfigModule],
       useFactory: async (configService: ConfigService) => ({
-        uri: configService.get<string>('MONGODB_URI'),
+        uri: configService.get<string>("MONGODB_URI"),
         useNewUrlParser: true,
         useUnifiedTopology: true,
       }),
@@ -32,8 +33,8 @@ import { AdminModule } from './admin/admin.module';
       imports: [ConfigModule],
       useFactory: (configService: ConfigService) => [
         {
-          ttl: configService.get('RATE_LIMIT_TTL') || 60,
-          limit: configService.get('RATE_LIMIT_LIMIT') || 100,
+          ttl: configService.get("RATE_LIMIT_TTL") || 60,
+          limit: configService.get("RATE_LIMIT_LIMIT") || 100,
         },
       ],
       inject: [ConfigService],
@@ -47,6 +48,7 @@ import { AdminModule } from './admin/admin.module';
     NotificationsModule,
     UploadsModule,
     AdminModule,
+    S3Module,
   ],
 })
 export class AppModule {}
