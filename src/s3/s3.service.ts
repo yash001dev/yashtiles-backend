@@ -34,7 +34,7 @@ export class S3Service {
         Key: key,
         Body: imageBuffer,
         ContentType: this.getContentType(fileExtension),
-        ACL: "public-read",
+        ACL: "public-read", // Set ACL to public-read for direct access
       };
 
       const result = await this.s3.upload(uploadParams).promise();
