@@ -1,0 +1,185 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test PayU Callback Redirect</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 30px;
+            border: none;
+            border-radius: 5px;
+            font-size: 16px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        .success {
+            background-color: #28a745;
+        }
+        .success:hover {
+            background-color: #218838;
+        }
+        .danger {
+            background-color: #dc3545;
+        }
+        .danger:hover {
+            background-color: #c82333;
+        }
+        .info {
+            background-color: #17a2b8;
+        }
+        .info:hover {
+            background-color: #138496;
+        }
+        .note {
+            background-color: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin: 20px 0;
+            border-radius: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔄 Test PayU Callback Redirect</h1>
+        
+        <div class="note">
+            <strong>Note:</strong> This tool simulates PayU callback data and tests the redirect functionality to frontend pages.
+        </div>
+
+        <form id="callbackForm">
+            <div class="form-group">
+                <label for="txnid">Transaction ID:</label>
+                <input type="text" id="txnid" name="txnid" value="TXN123456789" required>
+            </div>
+
+            <div class="form-group">
+                <label for="status">Payment Status:</label>
+                <select id="status" name="status" required>
+                    <option value="success">Success</option>
+                    <option value="failure">Failure</option>
+                    <option value="pending">Pending</option>
+                    <option value="cancel">Cancel</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="orderId">Order ID:</label>
+                <input type="text" id="orderId" name="orderId" value="ORDER123456" required>
+            </div>
+
+            <div class="form-group">
+                <label for="amount">Amount:</label>
+                <input type="text" id="amount" name="amount" value="1000.00" required>
+            </div>
+
+            <div class="form-group">
+                <label for="payuMoneyId">PayU Money ID:</label>
+                <input type="text" id="payuMoneyId" name="payuMoneyId" value="PAYU123456">
+            </div>
+
+            <div class="form-group">
+                <label for="hash">Hash:</label>
+                <input type="text" id="hash" name="hash" value="dummy_hash_for_testing">
+            </div>
+
+            <button type="button" onclick="testCallback('POST')" class="success">Test POST Callback</button>
+            <button type="button" onclick="testCallback('GET')" class="info">Test GET Callback</button>
+            <button type="button" onclick="testDirectAccess()" class="danger">Test Direct Access</button>
+        </form>
+
+        <div id="result" style="margin-top: 20px;"></div>
+    </div>
+
+    <script>
+        function testCallback(method) {
+            const form = document.getElementById('callbackForm');
+            const formData = new FormData(form);
+            const data = Object.fromEntries(formData);
+            
+            console.log('Testing callback with:', data);
+            
+            const baseUrl = window.location.origin;
+            const callbackUrl = `${baseUrl}/api/v1/payments/payu/callback`;
+            
+            if (method === 'POST') {
+                // Create a form and submit it
+                const testForm = document.createElement('form');
+                testForm.method = 'POST';
+                testForm.action = callbackUrl;
+                testForm.style.display = 'none';
+                
+                for (const [key, value] of Object.entries(data)) {
+                    const input = document.createElement('input');
+                    input.type = 'hidden';
+                    input.name = key;
+                    input.value = value;
+                    testForm.appendChild(input);
+                }
+                
+                document.body.appendChild(testForm);
+                testForm.submit();
+            } else {
+                // GET request
+                const params = new URLSearchParams(data);
+                const getUrl = `${callbackUrl}?${params.toString()}`;
+                window.location.href = getUrl;
+            }
+        }
+
+        function testDirectAccess() {
+            const baseUrl = window.location.origin;
+            const frontendUrl = 'http://localhost:3001'; // Default frontend URL
+            
+            // Test direct access to frontend success page
+            const successUrl = `${frontendUrl}/payment-success?txnid=TEST123&status=success&orderId=ORDER123&paymentMethod=payu`;
+            window.open(successUrl, '_blank');
+            
+            // Test direct access to frontend failure page
+            setTimeout(() => {
+                const failureUrl = `${frontendUrl}/payment-failure?txnid=TEST123&status=failure&orderId=ORDER123&error=Test%20error`;
+                window.open(failureUrl, '_blank');
+            }, 1000);
+        }
+    </script>
+</body>
+</html>

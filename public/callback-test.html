@@ -1,0 +1,201 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Payment Callback Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .test-section {
+            margin-bottom: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        .success {
+            background-color: #e8f5e8;
+            border-color: #4caf50;
+        }
+        .error {
+            background-color: #ffebee;
+            border-color: #f44336;
+        }
+        button {
+            background: #4caf50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background: #45a049;
+        }
+        .result {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            display: none;
+        }
+        code {
+            background: #f4f4f4;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧪 Payment Callback Test</h1>
+        
+        <div class="test-section">
+            <h3>1. Test Route Availability</h3>
+            <p>Check if the payment callback endpoints are accessible:</p>
+            <button onclick="testRoute('/api/v1/payments/payu/test')">Test PayU Route</button>
+            <button onclick="testRoute('/api/v1/payments/payu/callback', 'POST')">Test Callback Route</button>
+            <div id="routeResult" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>2. Test Static Files</h3>
+            <p>Check if static files are being served correctly:</p>
+            <button onclick="testStaticFile('payment-success.html')">Test Success Page</button>
+            <button onclick="testStaticFile('payment-failure.html')">Test Failure Page</button>
+            <div id="staticResult" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>3. Simulate PayU Callback</h3>
+            <p>Test the PayU callback with mock data:</p>
+            <button onclick="simulatePayUCallback('success')">Simulate Success</button>
+            <button onclick="simulatePayUCallback('failure')">Simulate Failure</button>
+            <div id="callbackResult" class="result"></div>
+        </div>
+
+        <div class="test-section">
+            <h3>4. Check URL Parameters</h3>
+            <p>Current URL parameters:</p>
+            <div id="urlParams"></div>
+        </div>
+    </div>
+
+    <script>
+        // Display URL parameters
+        const urlParams = new URLSearchParams(window.location.search);
+        const paramsDiv = document.getElementById('urlParams');
+        if (urlParams.toString()) {
+            paramsDiv.innerHTML = '<code>' + urlParams.toString() + '</code>';
+        } else {
+            paramsDiv.innerHTML = '<em>No parameters found</em>';
+        }
+
+        async function testRoute(url, method = 'GET') {
+            const resultDiv = document.getElementById('routeResult');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = 'Testing...';
+
+            try {
+                const response = await fetch(url, { method });
+                const result = await response.text();
+                
+                if (response.ok) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `✅ Route ${url} is accessible<br><code>${response.status} ${response.statusText}</code>`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `❌ Route ${url} failed<br><code>${response.status} ${response.statusText}</code><br><pre>${result}</pre>`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `❌ Network error testing ${url}<br><code>${error.message}</code>`;
+            }
+        }
+
+        async function testStaticFile(filename) {
+            const resultDiv = document.getElementById('staticResult');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = 'Testing...';
+
+            try {
+                const response = await fetch(`/${filename}`);
+                
+                if (response.ok) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `✅ Static file ${filename} is accessible<br><code>${response.status} ${response.statusText}</code>`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `❌ Static file ${filename} failed<br><code>${response.status} ${response.statusText}</code>`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `❌ Network error testing ${filename}<br><code>${error.message}</code>`;
+            }
+        }
+
+        async function simulatePayUCallback(type) {
+            const resultDiv = document.getElementById('callbackResult');
+            resultDiv.style.display = 'block';
+            resultDiv.innerHTML = 'Testing...';
+
+            const mockData = type === 'success' ? {
+                txnid: 'test-txn-' + Date.now(),
+                status: 'success',
+                amount: '1500.00',
+                firstname: 'John',
+                email: 'john@example.com',
+                phone: '9876543210',
+                mihpayid: 'test-payment-id',
+                hash: 'test-hash-value'
+            } : {
+                txnid: 'test-txn-' + Date.now(),
+                status: 'failure',
+                amount: '1500.00',
+                firstname: 'John',
+                email: 'john@example.com',
+                phone: '9876543210',
+                error_Message: 'Payment failed',
+                hash: 'test-hash-value'
+            };
+
+            try {
+                const formData = new FormData();
+                Object.keys(mockData).forEach(key => {
+                    formData.append(key, mockData[key]);
+                });
+
+                const response = await fetch('/api/v1/payments/payu/callback', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                const result = await response.text();
+                
+                if (response.ok) {
+                    resultDiv.className = 'result success';
+                    resultDiv.innerHTML = `✅ Callback simulation successful<br><code>${response.status} ${response.statusText}</code><br><pre>${result}</pre>`;
+                } else {
+                    resultDiv.className = 'result error';
+                    resultDiv.innerHTML = `❌ Callback simulation failed<br><code>${response.status} ${response.statusText}</code><br><pre>${result}</pre>`;
+                }
+            } catch (error) {
+                resultDiv.className = 'result error';
+                resultDiv.innerHTML = `❌ Network error in callback simulation<br><code>${error.message}</code>`;
+            }
+        }
+    </script>
+</body>
+</html>

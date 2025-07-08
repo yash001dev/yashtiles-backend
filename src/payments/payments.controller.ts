@@ -22,6 +22,7 @@ import { PaymentsService } from "./payments.service";
 import { CreatePaymentIntentDto } from "./dto/create-payment-intent.dto";
 import { VerifyPaymentDto } from "./dto/verify-payment.dto";
 import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
+import { ConfigService } from "@nestjs/config";
 import * as crypto from "crypto";
 import Payu from "payu-websdk";
 import { memoryStorage } from "multer";
@@ -30,7 +31,10 @@ import { Response } from "express";
 @ApiTags("Payments")
 @Controller("payments")
 export class PaymentsController {
-  constructor(private readonly paymentsService: PaymentsService) {}
+  constructor(
+    private readonly paymentsService: PaymentsService,
+    private readonly configService: ConfigService
+  ) {}
 
   @Post("stripe/create-intent")
   @ApiOperation({ summary: "Create Stripe payment intent" })
@@ -138,17 +142,24 @@ export class PaymentsController {
     try {
       const result = await this.paymentsService.handlePayUCallback(body);
 
-      // Redirect to appropriate page based on payment status
+      // Get frontend URL from config
+      const frontendUrl = this.configService.get<string>("FRONTEND_URL") || "http://localhost:3001";
+
+      // Redirect to frontend pages based on payment status
       if (result.success) {
-        const redirectUrl = `/payment-success.html?txnid=${body.txnid}&status=${body.status}`;
+        const redirectUrl = `${frontendUrl}/payment-success?txnid=${body.txnid}&status=${body.status}&orderId=${result.orderId}&paymentMethod=payu`;
+        console.log("Redirecting to success page:", redirectUrl);
         res.redirect(redirectUrl);
       } else {
-        const redirectUrl = `/payment-failure.html?txnid=${body.txnid}&status=${body.status}&error=${encodeURIComponent(result.message)}`;
+        const redirectUrl = `${frontendUrl}/payment-failure?txnid=${body.txnid}&status=${body.status}&orderId=${result.orderId}&error=${encodeURIComponent(result.message)}`;
+        console.log("Redirecting to failure page:", redirectUrl);
         res.redirect(redirectUrl);
       }
     } catch (error) {
       console.error("Error in PayU callback:", error);
-      const redirectUrl = `/payment-failure.html?txnid=${body.txnid}&status=error&error=${encodeURIComponent(error.message)}`;
+      const frontendUrl = this.configService.get<string>("FRONTEND_URL") || "http://localhost:3001";
+      const redirectUrl = `${frontendUrl}/payment-failure?txnid=${body.txnid}&status=error&error=${encodeURIComponent(error.message)}`;
+      console.log("Redirecting to error page:", redirectUrl);
       res.redirect(redirectUrl);
     }
   }
@@ -162,17 +173,24 @@ export class PaymentsController {
     try {
       const result = await this.paymentsService.handlePayUCallback(query);
 
-      // Redirect to appropriate page based on payment status
+      // Get frontend URL from config
+      const frontendUrl = this.configService.get<string>("FRONTEND_URL") || "http://localhost:3001";
+
+      // Redirect to frontend pages based on payment status
       if (result.success) {
-        const redirectUrl = `/payment-success.html?txnid=${query.txnid}&status=${query.status}`;
+        const redirectUrl = `${frontendUrl}/payment-success?txnid=${query.txnid}&status=${query.status}&orderId=${result.orderId}&paymentMethod=payu`;
+        console.log("Redirecting to success page:", redirectUrl);
         res.redirect(redirectUrl);
       } else {
-        const redirectUrl = `/payment-failure.html?txnid=${query.txnid}&status=${query.status}&error=${encodeURIComponent(result.message)}`;
+        const redirectUrl = `${frontendUrl}/payment-failure?txnid=${query.txnid}&status=${query.status}&orderId=${result.orderId}&error=${encodeURIComponent(result.message)}`;
+        console.log("Redirecting to failure page:", redirectUrl);
         res.redirect(redirectUrl);
       }
     } catch (error) {
       console.error("Error in PayU callback GET:", error);
-      const redirectUrl = `/payment-failure.html?txnid=${query.txnid}&status=error&error=${encodeURIComponent(error.message)}`;
+      const frontendUrl = this.configService.get<string>("FRONTEND_URL") || "http://localhost:3001";
+      const redirectUrl = `${frontendUrl}/payment-failure?txnid=${query.txnid}&status=error&error=${encodeURIComponent(error.message)}`;
+      console.log("Redirecting to error page:", redirectUrl);
       res.redirect(redirectUrl);
     }
   }

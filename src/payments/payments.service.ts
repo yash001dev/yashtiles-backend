@@ -440,6 +440,8 @@ export class PaymentsService {
         success: true,
         status: body.status,
         message: "Payment successful and order confirmed",
+        orderId: order._id.toString(),
+        txnid: txnid
       };
     } else {
       console.log("Payment failed or invalid - updating order status");
@@ -472,6 +474,8 @@ export class PaymentsService {
         success: false,
         status: body.status,
         message: body.error_Message || body.field9 || "Payment failed",
+        orderId: order._id.toString(),
+        txnid: txnid
       };
     }
   }
