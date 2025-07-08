@@ -10,6 +10,7 @@ import * as crypto from "crypto";
 import { CreateOrderDto } from "../orders/dto/create-order.dto";
 import Payu from "payu-websdk";
 import { S3Service } from "../s3/s3.service";
+import { NotificationsService } from "../notifications/notifications.service";
 import * as https from "https";
 import * as http from "http";
 
@@ -21,7 +22,8 @@ export class PaymentsService {
   constructor(
     private configService: ConfigService,
     private ordersService: OrdersService,
-    private s3Service: S3Service
+    private s3Service: S3Service,
+    private notificationsService: NotificationsService
   ) {
     // Initialize Stripe
     this.stripe = new Stripe(
@@ -94,18 +96,44 @@ export class PaymentsService {
       const paymentIntent =
         await this.stripe.paymentIntents.retrieve(paymentIntentId);
 
+      const order = await this.ordersService.findOne(orderId);
+
       if (paymentIntent.status === "succeeded") {
         // Update order payment status
-        const order = await this.ordersService.findOne(orderId);
         await this.ordersService.updateStatus(orderId, {
-          status: order.status,
+          status: OrderStatus.CONFIRMED,
           paymentStatus: PaymentStatus.PAID,
           paymentId: paymentIntentId,
           paymentMethod: "stripe",
         } as any);
 
+        // Send payment success email
+        await this.notificationsService.sendPaymentSuccessEmail(
+          order.shippingAddress.email,
+          order.shippingAddress.firstName,
+          order,
+          paymentIntentId,
+          "stripe"
+        );
+
         return { success: true, message: "Payment verified successfully" };
       } else {
+        // Update order payment status to failed
+        await this.ordersService.updateStatus(orderId, {
+          status: OrderStatus.PENDING,
+          paymentStatus: PaymentStatus.FAILED,
+          paymentId: paymentIntentId,
+          paymentMethod: "stripe",
+        } as any);
+
+        // Send payment failure email
+        await this.notificationsService.sendPaymentFailureEmail(
+          order.shippingAddress.email,
+          order.shippingAddress.firstName,
+          order,
+          "Payment not completed"
+        );
+
         throw new BadRequestException("Payment not completed");
       }
     } catch (error) {
@@ -129,20 +157,44 @@ export class PaymentsService {
         .update(`${orderId}|${paymentId}`)
         .digest("hex");
 
+      const order = await this.ordersService.findOne(verifyPaymentDto.orderId);
+
       if (expectedSignature === signature) {
         // Update order payment status
-        const order = await this.ordersService.findOne(
-          verifyPaymentDto.orderId
-        );
         await this.ordersService.updateStatus(verifyPaymentDto.orderId, {
-          status: order.status,
+          status: OrderStatus.CONFIRMED,
           paymentStatus: PaymentStatus.PAID,
           paymentId,
           paymentMethod: "razorpay",
         } as any);
 
+        // Send payment success email
+        await this.notificationsService.sendPaymentSuccessEmail(
+          order.shippingAddress.email,
+          order.shippingAddress.firstName,
+          order,
+          paymentId,
+          "razorpay"
+        );
+
         return { success: true, message: "Payment verified successfully" };
       } else {
+        // Update order payment status to failed
+        await this.ordersService.updateStatus(verifyPaymentDto.orderId, {
+          status: OrderStatus.PENDING,
+          paymentStatus: PaymentStatus.FAILED,
+          paymentId,
+          paymentMethod: "razorpay",
+        } as any);
+
+        // Send payment failure email
+        await this.notificationsService.sendPaymentFailureEmail(
+          order.shippingAddress.email,
+          order.shippingAddress.firstName,
+          order,
+          "Invalid payment signature"
+        );
+
         throw new BadRequestException("Invalid payment signature");
       }
     } catch (error) {
@@ -168,11 +220,20 @@ export class PaymentsService {
           if (orderId) {
             const order = await this.ordersService.findOne(orderId);
             await this.ordersService.updateStatus(orderId, {
-              status: order.status,
+              status: OrderStatus.CONFIRMED,
               paymentStatus: PaymentStatus.PAID,
               paymentId: paymentIntent.id,
               paymentMethod: "stripe",
             } as any);
+
+            // Send payment success email
+            await this.notificationsService.sendPaymentSuccessEmail(
+              order.shippingAddress.email,
+              order.shippingAddress.firstName,
+              order,
+              paymentIntent.id,
+              "stripe"
+            );
           }
           break;
 
@@ -183,11 +244,19 @@ export class PaymentsService {
           if (failedOrderId) {
             const order = await this.ordersService.findOne(failedOrderId);
             await this.ordersService.updateStatus(failedOrderId, {
-              status: order.status,
+              status: OrderStatus.PENDING,
               paymentStatus: PaymentStatus.FAILED,
               paymentId: failedPayment.id,
               paymentMethod: "stripe",
             } as any);
+
+            // Send payment failure email
+            await this.notificationsService.sendPaymentFailureEmail(
+              order.shippingAddress.email,
+              order.shippingAddress.firstName,
+              order,
+              failedPayment.last_payment_error?.message || "Payment failed"
+            );
           }
           break;
 
@@ -228,17 +297,35 @@ export class PaymentsService {
       // Set status to PENDING
       orderDto.status = OrderStatus.PENDING;
       const userId = body.userId || null;
-      const order = await this.ordersService.create(orderDto, userId);
+      const order = await this.ordersService.create(orderDto, userId, false);
       orderId = (order as any)._id.toString();
     }
-    const surl = body.surl;
-    const furl = body.furl;
+
+    // Use API callback endpoints instead of frontend pages
+    const baseUrl =
+      this.configService.get<string>("BASE_URL") || "http://localhost:3000";
+    const surl = `${baseUrl}/api/v1/payments/payu/callback`;
+    const furl = `${baseUrl}/api/v1/payments/payu/callback`;
+
     const key = this.configService.get<string>("PAYU_API_KEY");
     const salt = this.configService.get<string>("PAYU_SALT");
     const payu = new Payu(
       { key, salt },
       process.env.NODE_ENV === "production" ? "PROD" : "TEST"
     );
+
+    console.log("PayU payment parameters:", {
+      key,
+      txnid,
+      amount,
+      productinfo,
+      firstname,
+      email,
+      phone,
+      surl,
+      furl,
+    });
+
     const paymentParams = {
       key,
       txnid,
@@ -283,44 +370,110 @@ export class PaymentsService {
   }
 
   async handlePayUCallback(body: any) {
+    console.log("=== PayU Callback Debug ===");
+    console.log("Callback body received:", JSON.stringify(body, null, 2));
+    console.log("Transaction ID:", body.txnid);
+    console.log("Status:", body.status);
+    console.log("Payment method:", body.payment_source);
+    console.log("Amount:", body.amount);
+
     // Validate hash and check status
     const key = this.configService.get<string>("PAYU_API_KEY");
     const salt = this.configService.get<string>("PAYU_SALT");
     const env = process.env.NODE_ENV === "production" ? "PROD" : "TEST";
     const payu = new Payu({ key, salt }, env);
+
+    console.log("Validating hash with key:", key);
+    console.log("Environment:", env);
+
     const isValid = payu.hasher.validateResponseHash(body);
+    console.log("Hash validation result:", isValid);
+
+    const txnid = body.txnid;
+    console.log("Looking for order with txnid:", txnid);
+
+    let order = await this.ordersService.getOrderByTxnId(txnid);
+    console.log("Order found:", order ? "Yes" : "No");
+
+    if (order) {
+      console.log("Order ID:", order._id);
+      console.log("Order status:", order.status);
+      console.log("Payment status:", order.paymentStatus);
+    }
+
+    if (!order || !order._id) {
+      console.log("Order not found, returning error");
+      return {
+        success: false,
+        status: "error",
+        message: "Order not found",
+      };
+    }
 
     if (isValid && body.status === "success") {
-      // Find the order by txnid and update status to CONFIRMED
-      const txnid = body.txnid;
-      let order = await this.ordersService.getOrderByTxnId(txnid);
+      console.log("Payment successful - updating order status");
 
-      if (order && order._id) {
-        // Update order status to CONFIRMED and payment status to PAID
-        await this.ordersService.updateStatus(order._id.toString(), {
-          status: OrderStatus.CONFIRMED,
-          paymentStatus: PaymentStatus.PAID,
-          paymentId: body.payuMoneyId || body.mihpayid,
-          paymentMethod: "payu",
-        } as any);
+      // Update order status to CONFIRMED and payment status to PAID
+      await this.ordersService.updateStatus(order._id.toString(), {
+        status: OrderStatus.CONFIRMED,
+        paymentStatus: PaymentStatus.PAID,
+        paymentId: body.payuMoneyId || body.mihpayid,
+        paymentMethod: "payu",
+      } as any);
 
-        console.log(
-          `Order ${order._id} marked as CONFIRMED after successful PayU payment`
-        );
-      }
+      console.log("Order status updated, sending success email");
+
+      // Send payment success email
+      await this.notificationsService.sendPaymentSuccessEmail(
+        order.shippingAddress.email,
+        order.shippingAddress.firstName,
+        order,
+        body.payuMoneyId || body.mihpayid,
+        "payu"
+      );
+
+      console.log(
+        `Order ${order._id} marked as CONFIRMED after successful PayU payment`
+      );
 
       return {
         success: true,
         status: body.status,
         message: "Payment successful and order confirmed",
       };
-    }
+    } else {
+      console.log("Payment failed or invalid - updating order status");
+      console.log("Hash valid:", isValid);
+      console.log("Status:", body.status);
 
-    return {
-      success: false,
-      status: body.status,
-      message: "Payment failed or invalid",
-    };
+      // Payment failed - update order status
+      await this.ordersService.updateStatus(order._id.toString(), {
+        status: OrderStatus.PENDING,
+        paymentStatus: PaymentStatus.FAILED,
+        paymentId: body.payuMoneyId || body.mihpayid || txnid,
+        paymentMethod: "payu",
+      } as any);
+
+      console.log("Order status updated, sending failure email");
+
+      // Send payment failure email
+      await this.notificationsService.sendPaymentFailureEmail(
+        order.shippingAddress.email,
+        order.shippingAddress.firstName,
+        order,
+        body.error_Message || body.field9 || "Payment could not be processed"
+      );
+
+      console.log(
+        `Order ${order._id} marked as FAILED after unsuccessful PayU payment`
+      );
+
+      return {
+        success: false,
+        status: body.status,
+        message: body.error_Message || body.field9 || "Payment failed",
+      };
+    }
   }
 
   async initiatePayUPaymentWithImages(
@@ -399,9 +552,13 @@ export class PaymentsService {
         }
       }
 
-      // Update order items with S3 image URLs
+      // Update order items with S3 image URLs and add default productId
       orderData.items.forEach((item, index) => {
         item.imageUrl = uploadedImageUrls[index];
+        // Add a default productId for custom frame orders
+        if (!item.productId) {
+          item.productId = `custom-frame-${Date.now()}-${index}`;
+        }
       });
 
       // Set order details
@@ -417,16 +574,24 @@ export class PaymentsService {
       orderData.status = OrderStatus.PROCESSING;
       orderData.paymentStatus = PaymentStatus.PENDING;
 
-      // Create order in database
+      // Create order in database without sending confirmation email
       const userId = body.userId || null;
-      const order = await this.ordersService.create(orderData, userId);
+      const order = await this.ordersService.create(orderData, userId, false);
       const orderId = (order as any)._id.toString();
 
       console.log(`Order created with ID: ${orderId}, Status: PROCESSING`);
 
       // Prepare PayU payment parameters
-      const surl = body.surl;
-      const furl = body.furl;
+      // Use API callback endpoints instead of frontend pages
+      const baseUrl =
+        this.configService.get<string>("BASE_URL") || "http://localhost:3000";
+      const surl = `${baseUrl}/api/v1/payments/payu/callback`;
+      const furl = `${baseUrl}/api/v1/payments/payu/callback`;
+
+      console.log("PayU callback URLs:");
+      console.log("Success URL (surl):", surl);
+      console.log("Failure URL (furl):", furl);
+
       const key = this.configService.get<string>("PAYU_API_KEY");
       const salt = this.configService.get<string>("PAYU_SALT");
 
@@ -457,6 +622,9 @@ export class PaymentsService {
         udf4,
         udf5,
       };
+
+      console.log("PayU payment parameters:");
+      console.log(JSON.stringify(paymentParams, null, 2));
 
       const paramsHtml = payu.paymentInitiate(paymentParams);
 

@@ -1,0 +1,221 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PayU Payment Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+            color: #555;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 16px;
+        }
+        button {
+            background: linear-gradient(135deg, #4caf50 0%, #2e7d32 100%);
+            color: white;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            font-weight: bold;
+            width: 100%;
+            transition: all 0.3s ease;
+        }
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3);
+        }
+        .file-input {
+            margin-top: 10px;
+        }
+        .note {
+            background: #e8f5e8;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+            border-left: 4px solid #4caf50;
+        }
+        .currency {
+            color: #2e7d32;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 PayU Payment Test - Custom Frame Order</h1>
+        
+        <div class="note">
+            <strong>📧 Email Notification Test:</strong> This form will test the new email notification system for PayU payments. 
+            You'll receive emails on payment success/failure with <span class="currency">₹</span> currency instead of $.
+        </div>
+
+        <form id="payuForm" enctype="multipart/form-data">
+            <div class="form-group">
+                <label for="email">📧 Email (for notifications):</label>
+                <input type="email" id="email" name="email" required placeholder="your.email@example.com">
+            </div>
+
+            <div class="form-group">
+                <label for="firstName">👤 First Name:</label>
+                <input type="text" id="firstName" name="firstName" required placeholder="John">
+            </div>
+
+            <div class="form-group">
+                <label for="lastName">👤 Last Name:</label>
+                <input type="text" id="lastName" name="lastName" required placeholder="Doe">
+            </div>
+
+            <div class="form-group">
+                <label for="phone">📱 Phone:</label>
+                <input type="tel" id="phone" name="phone" required placeholder="+91 9876543210">
+            </div>
+
+            <div class="form-group">
+                <label for="amount">💰 Amount (<span class="currency">₹</span>):</label>
+                <input type="number" id="amount" name="amount" step="0.01" required placeholder="1500.00">
+            </div>
+
+            <div class="form-group">
+                <label for="frameImages">🖼️ Frame Images:</label>
+                <input type="file" id="frameImages" name="frameImages" multiple accept="image/*" required class="file-input">
+                <small style="color: #666;">Select images for your custom frames</small>
+            </div>
+
+            <div class="form-group">
+                <label for="frameSize">📏 Frame Size:</label>
+                <select id="frameSize" name="frameSize" required>
+                    <option value="">Select Size</option>
+                    <option value="8x10">8x10 inches</option>
+                    <option value="11x14">11x14 inches</option>
+                    <option value="16x20">16x20 inches</option>
+                    <option value="20x24">20x24 inches</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="frameType">🖼️ Frame Type:</label>
+                <select id="frameType" name="frameType" required>
+                    <option value="">Select Frame Type</option>
+                    <option value="wooden">Wooden Frame</option>
+                    <option value="metal">Metal Frame</option>
+                    <option value="plastic">Plastic Frame</option>
+                </select>
+            </div>
+
+            <div class="form-group">
+                <label for="address">🏠 Address:</label>
+                <textarea id="address" name="address" required placeholder="123 Main Street, City, State - 400001"></textarea>
+            </div>
+
+            <button type="submit">💳 Proceed to PayU Payment</button>
+        </form>
+    </div>
+
+    <script>
+        document.getElementById('payuForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData();
+            const fileInput = document.getElementById('frameImages');
+            const files = fileInput.files;
+            
+            // Add frame images
+            for (let i = 0; i < files.length; i++) {
+                formData.append('frameImages', files[i]);
+            }
+            
+            // Prepare order data
+            const orderData = {
+                items: Array.from(files).map((file, index) => ({
+                    productId: `custom-frame-${Date.now()}-${index}`,
+                    size: document.getElementById('frameSize').value,
+                    frameType: document.getElementById('frameType').value,
+                    quantity: 1,
+                    price: parseFloat(document.getElementById('amount').value) / files.length,
+                    imageUrl: '' // Will be populated by backend
+                })),
+                totalAmount: parseFloat(document.getElementById('amount').value),
+                shippingAddress: {
+                    firstName: document.getElementById('firstName').value,
+                    lastName: document.getElementById('lastName').value,
+                    email: document.getElementById('email').value,
+                    phone: document.getElementById('phone').value,
+                    street: document.getElementById('address').value,
+                    city: 'Test City',
+                    state: 'Test State',
+                    zipCode: '400001',
+                    country: 'India'
+                }
+            };
+            
+            formData.append('order', JSON.stringify(orderData));
+            formData.append('phone', document.getElementById('phone').value);
+            // URLs are now handled by backend
+            
+            try {
+                const response = await fetch('/api/v1/payments/payu/initiate', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    // Create a form to submit to PayU
+                    const payuForm = document.createElement('form');
+                    payuForm.method = 'POST';
+                    payuForm.action = result.action;
+                    
+                    // Add all parameters as hidden inputs
+                    for (const [key, value] of Object.entries(result.params)) {
+                        const input = document.createElement('input');
+                        input.type = 'hidden';
+                        input.name = key;
+                        input.value = value;
+                        payuForm.appendChild(input);
+                    }
+                    
+                    document.body.appendChild(payuForm);
+                    payuForm.submit();
+                } else {
+                    alert('Error: ' + result.message);
+                }
+            } catch (error) {
+                console.error('Error:', error);
+                alert('Something went wrong. Please try again.');
+            }
+        });
+    </script>
+</body>
+</html>

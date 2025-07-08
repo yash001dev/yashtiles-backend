@@ -315,7 +315,7 @@ export class NotificationsService {
             ${item.quantity}
           </td>
           <td style="padding: 10px; border-bottom: 1px solid #eee; text-align: right;">
-            $${item.price.toFixed(2)}
+            ₹${item.price.toFixed(2)}
           </td>
         </tr>
       `
@@ -335,7 +335,7 @@ export class NotificationsService {
             <div style="background-color: #f8f9fa; padding: 20px; border-radius: 5px; margin: 20px 0;">
               <h3 style="margin-top: 0;">Order Details</h3>
               <p><strong>Order Number:</strong> ${order.orderNumber}</p>
-              <p><strong>Total Amount:</strong> $${order.totalAmount.toFixed(2)}</p>
+              <p><strong>Total Amount:</strong> ₹${order.totalAmount.toFixed(2)}</p>
             </div>
 
             <h3>Items Ordered:</h3>
@@ -416,6 +416,296 @@ export class NotificationsService {
       await this.transporter.sendMail(mailOptions);
     } catch (error) {
       console.error("Failed to send order status update email:", error);
+    }
+  }
+
+  async sendPaymentSuccessEmail(
+    email: string,
+    firstName: string,
+    order: Order,
+    paymentId: string,
+    paymentMethod: string
+  ) {
+    try {
+      const itemsHtml = order.items
+        .map(
+          (item) => `
+        <tr>
+          <td style="padding: 12px; border-bottom: 1px solid #e0e0e0;">
+            <img src="${item.imageUrl}" alt="Frame" style="width: 70px; height: 70px; object-fit: cover; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+          </td>
+          <td style="padding: 12px; border-bottom: 1px solid #e0e0e0;">
+            <div style="font-weight: 500; color: #333; margin-bottom: 4px;">${item.size} - ${item.frameType}</div>
+            <div style="color: #666; font-size: 14px;">Custom Frame</div>
+          </td>
+          <td style="padding: 12px; border-bottom: 1px solid #e0e0e0; text-align: center;">
+            <span style="background-color: #f0f0f0; padding: 4px 8px; border-radius: 4px; font-weight: 500;">${item.quantity}</span>
+          </td>
+          <td style="padding: 12px; border-bottom: 1px solid #e0e0e0; text-align: right;">
+            <span style="font-weight: 600; color: #2e7d32; font-size: 16px;">₹${item.price.toFixed(2)}</span>
+          </td>
+        </tr>
+      `
+        )
+        .join("");
+
+      const mailOptions = {
+        from: `${this.configService.get<string>("FROM_NAME")} <${this.configService.get<string>("FROM_EMAIL")}>`,
+        to: email,
+        subject: `🎉 Payment Successful - Order ${order.orderNumber}`,
+        html: `
+          <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 650px; margin: 0 auto; background-color: #ffffff; box-shadow: 0 0 20px rgba(0,0,0,0.1); border-radius: 10px; overflow: hidden;">
+            
+            <!-- Header -->
+            <div style="background: linear-gradient(135deg, #4caf50 0%, #2e7d32 100%); padding: 30px; text-align: center; color: white;">
+              <div style="font-size: 48px; margin-bottom: 10px;">✅</div>
+              <h1 style="margin: 0; font-size: 28px; font-weight: 600;">Payment Successful!</h1>
+              <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">Your order has been confirmed and is being processed</p>
+            </div>
+
+            <!-- Content -->
+            <div style="padding: 30px;">
+              <div style="text-align: center; margin-bottom: 30px;">
+                <p style="font-size: 18px; color: #333; margin: 0;">Hi <strong>${firstName}</strong>,</p>
+                <p style="font-size: 16px; color: #666; margin: 10px 0 0 0;">Great news! Your payment has been processed successfully and your custom frame order is confirmed.</p>
+              </div>
+              
+              <!-- Payment Details -->
+              <div style="background: linear-gradient(135deg, #e8f5e8 0%, #f1f8f1 100%); padding: 25px; border-radius: 10px; margin-bottom: 25px; border-left: 4px solid #4caf50;">
+                <h3 style="margin-top: 0; color: #2e7d32; font-size: 20px; display: flex; align-items: center;">
+                  <span style="margin-right: 10px;">💳</span>
+                  Payment Details
+                </h3>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                  <span style="color: #666;">Payment ID:</span>
+                  <span style="font-weight: 600; color: #333;">${paymentId}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                  <span style="color: #666;">Payment Method:</span>
+                  <span style="font-weight: 600; color: #333; text-transform: uppercase;">${paymentMethod}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                  <span style="color: #666;">Order Number:</span>
+                  <span style="font-weight: 600; color: #333;">${order.orderNumber}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; border-top: 1px solid #c8e6c9; padding-top: 10px; margin-top: 10px;">
+                  <span style="color: #666; font-size: 18px;">Total Amount:</span>
+                  <span style="font-weight: 700; color: #2e7d32; font-size: 24px;">₹${order.totalAmount.toFixed(2)}</span>
+                </div>
+              </div>
+
+              <!-- Order Items -->
+              <div style="margin-bottom: 25px;">
+                <h3 style="color: #333; margin-bottom: 15px; font-size: 20px; display: flex; align-items: center;">
+                  <span style="margin-right: 10px;">📦</span>
+                  Order Items
+                </h3>
+                <div style="background-color: #fafafa; border-radius: 8px; overflow: hidden; border: 1px solid #e0e0e0;">
+                  <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                      <tr style="background-color: #f5f5f5;">
+                        <th style="padding: 15px; text-align: left; color: #666; font-weight: 600;">Image</th>
+                        <th style="padding: 15px; text-align: left; color: #666; font-weight: 600;">Details</th>
+                        <th style="padding: 15px; text-align: center; color: #666; font-weight: 600;">Qty</th>
+                        <th style="padding: 15px; text-align: right; color: #666; font-weight: 600;">Price</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${itemsHtml}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- Shipping Address -->
+              <div style="background-color: #f8f9fa; padding: 25px; border-radius: 10px; margin-bottom: 25px;">
+                <h3 style="margin-top: 0; color: #333; font-size: 20px; display: flex; align-items: center;">
+                  <span style="margin-right: 10px;">🚚</span>
+                  Shipping Address
+                </h3>
+                <div style="color: #666; line-height: 1.6;">
+                  <strong style="color: #333;">${order.shippingAddress.firstName} ${order.shippingAddress.lastName}</strong><br>
+                  ${order.shippingAddress.street}<br>
+                  ${order.shippingAddress.city}, ${order.shippingAddress.state} ${order.shippingAddress.zipCode}<br>
+                  ${order.shippingAddress.country}
+                </div>
+              </div>
+
+              <!-- Next Steps -->
+              <div style="background: linear-gradient(135deg, #e3f2fd 0%, #f1f8ff 100%); padding: 25px; border-radius: 10px; border-left: 4px solid #2196f3;">
+                <h3 style="margin-top: 0; color: #1976d2; font-size: 20px; display: flex; align-items: center;">
+                  <span style="margin-right: 10px;">🔄</span>
+                  What's Next?
+                </h3>
+                <ul style="color: #666; line-height: 1.6; margin: 0; padding-left: 20px;">
+                  <li>Your order is now being processed by our craftsmen</li>
+                  <li>You'll receive tracking information once your order ships</li>
+                  <li>Estimated delivery: 5-7 business days</li>
+                </ul>
+              </div>
+
+              <!-- Footer -->
+              <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
+                <p style="color: #666; margin: 0;">Thank you for choosing us for your custom framing needs!</p>
+                <p style="color: #666; margin: 5px 0 0 0;">
+                  Best regards,<br>
+                  <strong style="color: #333;">The YashTiles Team</strong>
+                </p>
+              </div>
+            </div>
+          </div>
+        `,
+      };
+
+      await this.transporter.sendMail(mailOptions);
+      console.log(`Payment success email sent to ${email}`);
+    } catch (error) {
+      console.error("Failed to send payment success email:", error);
+    }
+  }
+
+  async sendPaymentFailureEmail(
+    email: string,
+    firstName: string,
+    order: Order,
+    errorMessage?: string
+  ) {
+    try {
+      const itemsHtml = order.items
+        .map(
+          (item) => `
+        <tr>
+          <td style="padding: 12px; border-bottom: 1px solid #e0e0e0;">
+            <img src="${item.imageUrl}" alt="Frame" style="width: 70px; height: 70px; object-fit: cover; border-radius: 8px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+          </td>
+          <td style="padding: 12px; border-bottom: 1px solid #e0e0e0;">
+            <div style="font-weight: 500; color: #333; margin-bottom: 4px;">${item.size} - ${item.frameType}</div>
+            <div style="color: #666; font-size: 14px;">Custom Frame</div>
+          </td>
+          <td style="padding: 12px; border-bottom: 1px solid #e0e0e0; text-align: center;">
+            <span style="background-color: #f0f0f0; padding: 4px 8px; border-radius: 4px; font-weight: 500;">${item.quantity}</span>
+          </td>
+          <td style="padding: 12px; border-bottom: 1px solid #e0e0e0; text-align: right;">
+            <span style="font-weight: 600; color: #d32f2f; font-size: 16px;">₹${item.price.toFixed(2)}</span>
+          </td>
+        </tr>
+      `
+        )
+        .join("");
+
+      const mailOptions = {
+        from: `${this.configService.get<string>("FROM_NAME")} <${this.configService.get<string>("FROM_EMAIL")}>`,
+        to: email,
+        subject: `❌ Payment Failed - Order ${order.orderNumber}`,
+        html: `
+          <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 650px; margin: 0 auto; background-color: #ffffff; box-shadow: 0 0 20px rgba(0,0,0,0.1); border-radius: 10px; overflow: hidden;">
+            
+            <!-- Header -->
+            <div style="background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%); padding: 30px; text-align: center; color: white;">
+              <div style="font-size: 48px; margin-bottom: 10px;">❌</div>
+              <h1 style="margin: 0; font-size: 28px; font-weight: 600;">Payment Failed</h1>
+              <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">We encountered an issue processing your payment</p>
+            </div>
+
+            <!-- Content -->
+            <div style="padding: 30px;">
+              <div style="text-align: center; margin-bottom: 30px;">
+                <p style="font-size: 18px; color: #333; margin: 0;">Hi <strong>${firstName}</strong>,</p>
+                <p style="font-size: 16px; color: #666; margin: 10px 0 0 0;">We're sorry, but your payment could not be processed. Don't worry - no charges were made to your account.</p>
+              </div>
+              
+              <!-- Error Details -->
+              <div style="background: linear-gradient(135deg, #ffebee 0%, #fce4ec 100%); padding: 25px; border-radius: 10px; margin-bottom: 25px; border-left: 4px solid #f44336;">
+                <h3 style="margin-top: 0; color: #d32f2f; font-size: 20px; display: flex; align-items: center;">
+                  <span style="margin-right: 10px;">⚠️</span>
+                  Payment Details
+                </h3>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                  <span style="color: #666;">Order Number:</span>
+                  <span style="font-weight: 600; color: #333;">${order.orderNumber}</span>
+                </div>
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                  <span style="color: #666;">Amount:</span>
+                  <span style="font-weight: 600; color: #333;">₹${order.totalAmount.toFixed(2)}</span>
+                </div>
+                ${
+                  errorMessage
+                    ? `
+                <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
+                  <span style="color: #666;">Error:</span>
+                  <span style="font-weight: 600; color: #d32f2f;">${errorMessage}</span>
+                </div>
+                `
+                    : ""
+                }
+                <div style="display: flex; justify-content: space-between; border-top: 1px solid #ffcdd2; padding-top: 10px; margin-top: 10px;">
+                  <span style="color: #666; font-size: 18px;">Status:</span>
+                  <span style="font-weight: 700; color: #d32f2f; font-size: 18px;">FAILED</span>
+                </div>
+              </div>
+
+              <!-- Order Items -->
+              <div style="margin-bottom: 25px;">
+                <h3 style="color: #333; margin-bottom: 15px; font-size: 20px; display: flex; align-items: center;">
+                  <span style="margin-right: 10px;">📦</span>
+                  Order Items (Payment Pending)
+                </h3>
+                <div style="background-color: #fafafa; border-radius: 8px; overflow: hidden; border: 1px solid #e0e0e0; opacity: 0.8;">
+                  <table style="width: 100%; border-collapse: collapse;">
+                    <thead>
+                      <tr style="background-color: #f5f5f5;">
+                        <th style="padding: 15px; text-align: left; color: #666; font-weight: 600;">Image</th>
+                        <th style="padding: 15px; text-align: left; color: #666; font-weight: 600;">Details</th>
+                        <th style="padding: 15px; text-align: center; color: #666; font-weight: 600;">Qty</th>
+                        <th style="padding: 15px; text-align: right; color: #666; font-weight: 600;">Price</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      ${itemsHtml}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+
+              <!-- Retry Instructions -->
+              <div style="background: linear-gradient(135deg, #e8f5e8 0%, #f1f8f1 100%); padding: 25px; border-radius: 10px; margin-bottom: 25px; border-left: 4px solid #4caf50;">
+                <h3 style="margin-top: 0; color: #2e7d32; font-size: 20px; display: flex; align-items: center;">
+                  <span style="margin-right: 10px;">🔄</span>
+                  What You Can Do
+                </h3>
+                <ul style="color: #666; line-height: 1.6; margin: 0; padding-left: 20px;">
+                  <li>Check your card details and try again</li>
+                  <li>Ensure you have sufficient balance in your account</li>
+                  <li>Try using a different payment method</li>
+                  <li>Contact your bank if the issue persists</li>
+                  <li>Reach out to our support team for assistance</li>
+                </ul>
+              </div>
+
+              <!-- Call to Action -->
+              <div style="text-align: center; margin-bottom: 25px;">
+                <a href="#" style="background: linear-gradient(135deg, #4caf50 0%, #2e7d32 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: 600; display: inline-block; box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3); transition: all 0.3s ease;">
+                  🔄 Try Payment Again
+                </a>
+              </div>
+
+              <!-- Footer -->
+              <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
+                <p style="color: #666; margin: 0;">Need help? Contact our support team at support@yashtiles.com</p>
+                <p style="color: #666; margin: 5px 0 0 0;">
+                  Best regards,<br>
+                  <strong style="color: #333;">The YashTiles Team</strong>
+                </p>
+              </div>
+            </div>
+          </div>
+        `,
+      };
+
+      await this.transporter.sendMail(mailOptions);
+      console.log(`Payment failure email sent to ${email}`);
+    } catch (error) {
+      console.error("Failed to send payment failure email:", error);
     }
   }
 

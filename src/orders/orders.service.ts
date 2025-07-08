@@ -18,7 +18,11 @@ export class OrdersService {
     private notificationsService: NotificationsService
   ) {}
 
-  async create(createOrderDto: CreateOrderDto, userId: string): Promise<Order> {
+  async create(
+    createOrderDto: CreateOrderDto,
+    userId: string,
+    sendEmail: boolean = true
+  ): Promise<Order> {
     const orderNumber = await this.generateOrderNumber();
 
     const order = new this.orderModel({
@@ -30,17 +34,18 @@ export class OrdersService {
           status: OrderStatus.PENDING,
           timestamp: new Date(),
         },
-      ],
-    });
+      ],    });
     const savedOrder = await order.save();
-    //Find refrence of productId in products collection and add it to the order
-    // await savedOrder.populate("items.productId");
-    // Send order confirmation email
-    await this.notificationsService.sendOrderConfirmationEmail(
-      savedOrder.shippingAddress.email,
-      savedOrder.shippingAddress.firstName,
-      savedOrder
-    );
+    // Note: productId is now a string identifier, not a Product reference
+    
+    // Send order confirmation email only if sendEmail is true
+    if (sendEmail) {
+      await this.notificationsService.sendOrderConfirmationEmail(
+        savedOrder.shippingAddress.email,
+        savedOrder.shippingAddress.firstName,
+        savedOrder
+      );
+    }
 
     // Send WhatsApp notification - COMMENTED OUT FOR NOW
     // if (savedOrder.shippingAddress.phone) {
@@ -63,7 +68,6 @@ export class OrdersService {
     const [orders, total] = await Promise.all([
       this.orderModel
         .find(filter)
-        .populate("items.productId")
         .skip(skip)
         .limit(limit)
         .sort({ createdAt: -1 })
@@ -90,7 +94,6 @@ export class OrdersService {
 
     const order = await this.orderModel
       .findOne(filter)
-      .populate("items.productId")
       .exec();
 
     if (!order) {
@@ -132,7 +135,7 @@ export class OrdersService {
     }
 
     const updatedOrder = await order.save();
-    await updatedOrder.populate("items.productId");
+    // Note: productId is now a string identifier, not a Product reference
 
     // Send status update notifications
     await this.notificationsService.sendOrderStatusUpdateEmail(
@@ -161,7 +164,6 @@ export class OrdersService {
     const [orders, total] = await Promise.all([
       this.orderModel
         .find({ status })
-        .populate("items.productId")
         .skip(skip)
         .limit(limit)
         .sort({ createdAt: -1 })
@@ -198,6 +200,12 @@ export class OrdersService {
   }
 
   async getOrderByTxnId(txnid: string): Promise<OrderDocument | null> {
-    return this.orderModel.findOne({ txnid }).exec();
+    console.log(`Looking for order with txnid: ${txnid}`);
+    const order = await this.orderModel.findOne({ txnid }).exec();
+    console.log(`Order found: ${order ? "Yes" : "No"}`);
+    if (order) {
+      console.log(`Order ID: ${order._id}, Status: ${order.status}`);
+    }
+    return order;
   }
 }

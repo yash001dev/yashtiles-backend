@@ -7,6 +7,9 @@ import {
   UseGuards,
   UseInterceptors,
   UploadedFiles,
+  Res,
+  Get,
+  Query,
 } from "@nestjs/common";
 import {
   ApiTags,
@@ -22,6 +25,7 @@ import { JwtAuthGuard } from "../auth/guards/jwt-auth.guard";
 import * as crypto from "crypto";
 import Payu from "payu-websdk";
 import { memoryStorage } from "multer";
+import { Response } from "express";
 
 @ApiTags("Payments")
 @Controller("payments")
@@ -125,8 +129,52 @@ export class PaymentsController {
 
   @Post("payu/callback")
   @ApiOperation({ summary: "PayU payment callback" })
-  async handlePayUCallback(@Body() body: any) {
-    return this.paymentsService.handlePayUCallback(body);
+  @ApiConsumes("application/x-www-form-urlencoded")
+  async handlePayUCallback(@Body() body: any, @Res() res: Response) {
+    console.log("=== PayU Callback Received ===");
+    console.log("Callback body:", body);
+    console.log("Callback keys:", Object.keys(body));
+
+    try {
+      const result = await this.paymentsService.handlePayUCallback(body);
+
+      // Redirect to appropriate page based on payment status
+      if (result.success) {
+        const redirectUrl = `/payment-success.html?txnid=${body.txnid}&status=${body.status}`;
+        res.redirect(redirectUrl);
+      } else {
+        const redirectUrl = `/payment-failure.html?txnid=${body.txnid}&status=${body.status}&error=${encodeURIComponent(result.message)}`;
+        res.redirect(redirectUrl);
+      }
+    } catch (error) {
+      console.error("Error in PayU callback:", error);
+      const redirectUrl = `/payment-failure.html?txnid=${body.txnid}&status=error&error=${encodeURIComponent(error.message)}`;
+      res.redirect(redirectUrl);
+    }
+  }
+
+  @Get("payu/callback")
+  @ApiOperation({ summary: "PayU payment callback (GET)" })
+  async handlePayUCallbackGet(@Query() query: any, @Res() res: Response) {
+    console.log("=== PayU Callback GET Received ===");
+    console.log("Callback query:", query);
+
+    try {
+      const result = await this.paymentsService.handlePayUCallback(query);
+
+      // Redirect to appropriate page based on payment status
+      if (result.success) {
+        const redirectUrl = `/payment-success.html?txnid=${query.txnid}&status=${query.status}`;
+        res.redirect(redirectUrl);
+      } else {
+        const redirectUrl = `/payment-failure.html?txnid=${query.txnid}&status=${query.status}&error=${encodeURIComponent(result.message)}`;
+        res.redirect(redirectUrl);
+      }
+    } catch (error) {
+      console.error("Error in PayU callback GET:", error);
+      const redirectUrl = `/payment-failure.html?txnid=${query.txnid}&status=error&error=${encodeURIComponent(error.message)}`;
+      res.redirect(redirectUrl);
+    }
   }
 
   @Post("payu/generate-hash")
@@ -177,5 +225,11 @@ export class PaymentsController {
   async verifyPayUPayment(@Body() body: any) {
     const { txnid } = body;
     return this.paymentsService.verifyPayUPayment(txnid);
+  }
+
+  @Get("payu/test")
+  @ApiOperation({ summary: "Test PayU endpoint" })
+  testPayUEndpoint() {
+    return { message: "PayU endpoint is working", timestamp: new Date().toISOString() };
   }
 }
