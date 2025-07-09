@@ -1,7 +1,7 @@
 # New Admin APIs for Orders Module
 
 ## Overview
-Added three new admin-only APIs to enhance order management capabilities for administrators.
+Added three new admin-only APIs to enhance order management capabilities for administrators. **All status updates now automatically send email notifications to customers.**
 
 ## 1. Bulk Update Orders API
 
@@ -27,6 +27,8 @@ Added three new admin-only APIs to enhance order management capabilities for adm
   "failed": ["orderId3: Order not found"]
 }
 ```
+
+**📧 Email Notification:** When status is updated, each customer receives an email notification about their order status change.
 
 ## 2. Single Order Update API
 
@@ -77,6 +79,16 @@ Added three new admin-only APIs to enhance order management capabilities for adm
 
 ### Response
 Returns the updated order object with all changes applied.
+
+**📧 Email Notification:** When status is updated, the customer receives an email notification about the order status change.
+
+## 3. Original Status Update API (Enhanced)
+
+**Endpoint:** `PATCH /orders/:id/status`
+**Access:** Admin only
+**Purpose:** Update order status (already had email notifications)
+
+**📧 Email Notification:** Customer receives email notification when status is updated.
 
 ## 3. Advanced Order Search API
 
@@ -172,3 +184,31 @@ All APIs include proper error handling with appropriate HTTP status codes:
 - **Partial Matching**: Search with partial text matches
 - **Date Range Filtering**: Filter orders by date ranges
 - **Amount Range Filtering**: Filter orders by total amount ranges
+
+## Email Notifications 📧
+
+### Automatic Customer Notifications
+All admin APIs that change order status will automatically send email notifications to customers:
+
+1. **Bulk Update API** - When `status` field is updated for multiple orders
+2. **Single Order Update API** - When `status` field is updated  
+3. **Original Status Update API** - Already implemented
+
+### Email Content Includes:
+- Order number
+- New status with descriptive message
+- Tracking number (if available)
+- Estimated delivery date (if available)
+- Professional branded email template
+
+### Error Handling for Email:
+- Email failures are logged but don't cause the order update to fail
+- This ensures order updates succeed even if email service is temporarily unavailable
+- Admin can see email failures in the logs for troubleshooting
+
+### Supported Status Messages:
+- **CONFIRMED**: "Your order has been confirmed and is being prepared."
+- **PROCESSING**: "Your order is currently being processed."
+- **SHIPPED**: "Great news! Your order has been shipped."
+- **DELIVERED**: "Your order has been delivered successfully."
+- **CANCELLED**: "Your order has been cancelled."
