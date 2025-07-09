@@ -215,24 +215,6 @@ export class OrdersService {
 
         await this.orderModel.findByIdAndUpdate(orderId, updateData).exec();
         await order.save();
-
-        // Send email notification if status was updated
-        if (status !== undefined) {
-          try {
-            await this.notificationsService.sendOrderStatusUpdateEmail(
-              order.shippingAddress.email,
-              order.shippingAddress.firstName,
-              order
-            );
-          } catch (emailError) {
-            console.error(
-              `Failed to send email for order ${orderId}:`,
-              emailError
-            );
-            // Don't fail the bulk update if email fails, just log it
-          }
-        }
-
         updated++;
       } catch (error) {
         failed.push(`Order ${orderId}: ${error.message}`);
@@ -307,23 +289,6 @@ export class OrdersService {
       .exec();
 
     await order.save(); // Save status history changes
-
-    // Send email notification if status was updated
-    if (updateOrderDto.status !== undefined) {
-      try {
-        await this.notificationsService.sendOrderStatusUpdateEmail(
-          updatedOrder.shippingAddress.email,
-          updatedOrder.shippingAddress.firstName,
-          updatedOrder
-        );
-      } catch (emailError) {
-        console.error(
-          `Failed to send status update email for order ${id}:`,
-          emailError
-        );
-        // Don't fail the update if email fails, just log it
-      }
-    }
 
     return updatedOrder;
   }
