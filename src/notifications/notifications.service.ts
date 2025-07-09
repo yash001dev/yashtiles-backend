@@ -382,34 +382,196 @@ export class NotificationsService {
   ) {
     try {
       const statusMessages = {
-        [OrderStatus.CONFIRMED]:
-          "Your order has been confirmed and is being prepared.",
-        [OrderStatus.PROCESSING]: "Your order is currently being processed.",
-        [OrderStatus.SHIPPED]: "Great news! Your order has been shipped.",
-        [OrderStatus.DELIVERED]: "Your order has been delivered successfully.",
-        [OrderStatus.CANCELLED]: "Your order has been cancelled.",
+        [OrderStatus.CONFIRMED]: {
+          message: "Your order has been confirmed and is being prepared with care.",
+          icon: "✅",
+          color: "#2e7d32",
+          bgColor: "#e8f5e8"
+        },
+        [OrderStatus.PROCESSING]: {
+          message: "Your custom frames are being crafted by our skilled artisans.",
+          icon: "🔨",
+          color: "#ed6c02",
+          bgColor: "#fff3e0"
+        },
+        [OrderStatus.SHIPPED]: {
+          message: "Exciting news! Your beautiful frames are on their way to you.",
+          icon: "🚚",
+          color: "#1976d2",
+          bgColor: "#e3f2fd"
+        },
+        [OrderStatus.DELIVERED]: {
+          message: "Your frames have arrived! We hope you love them.",
+          icon: "🎉",
+          color: "#388e3c",
+          bgColor: "#e8f5e8"
+        },
+        [OrderStatus.CANCELLED]: {
+          message: "Your order has been cancelled. If you have any questions, please contact us.",
+          icon: "❌",
+          color: "#d32f2f",
+          bgColor: "#ffebee"
+        },
       };
+
+      const currentStatus = statusMessages[order.status];
+      const progressPercentage = this.getStatusProgress(order.status);
+
+      // Create items HTML for order summary
+      const itemsHtml = order.items.map(item => `
+        <div style="display: flex; align-items: center; padding: 15px; border: 1px solid #e0e0e0; border-radius: 8px; margin-bottom: 10px; background: #fafafa;">
+          <img src="${item.imageUrl}" alt="Frame Preview" style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px; margin-right: 15px; border: 2px solid #ddd;">
+          <div style="flex: 1;">
+            <div style="font-weight: 600; color: #333; margin-bottom: 4px;">${item.size} Custom Frame</div>
+            <div style="color: #666; font-size: 14px;">${item.frameType} • Quantity: ${item.quantity}</div>
+            ${item.notes ? `<div style="color: #888; font-size: 12px; margin-top: 2px;">${item.notes}</div>` : ''}
+          </div>
+          <div style="font-weight: 600; color: #2e7d32;">₹${item.price.toFixed(2)}</div>
+        </div>
+      `).join('');
 
       const mailOptions = {
         from: `${this.configService.get<string>("FROM_NAME")} <${this.configService.get<string>("FROM_EMAIL")}>`,
         to: email,
-        subject: `Order Update - ${order.orderNumber}`,
+        subject: `${currentStatus.icon} Order ${order.status.charAt(0).toUpperCase() + order.status.slice(1)} - ${order.orderNumber}`,
         html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-            <h1 style="color: #333;">Order Status Update</h1>
-            <p>Hi ${firstName},</p>
-            <p>Your order <strong>${order.orderNumber}</strong> status has been updated.</p>
+          <!DOCTYPE html>
+          <html>
+          <head>
+            <meta charset="utf-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Order Status Update</title>
+          </head>
+          <body style="margin: 0; padding: 0; background-color: #f5f5f5; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;">
             
-            <div style="background-color: #f8f9fa; padding: 20px; border-radius: 5px; margin: 20px 0;">
-              <h3 style="margin-top: 0;">Current Status: ${order.status.toUpperCase()}</h3>
-              <p>${statusMessages[order.status]}</p>
-              ${order.trackingNumber ? `<p><strong>Tracking Number:</strong> ${order.trackingNumber}</p>` : ""}
-              ${order.estimatedDelivery ? `<p><strong>Estimated Delivery:</strong> ${new Date(order.estimatedDelivery).toLocaleDateString()}</p>` : ""}
+            <!-- Email Container -->
+            <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+              
+              <!-- Header -->
+              <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 30px; text-align: center;">
+                <div style="color: white; font-size: 28px; font-weight: bold; margin-bottom: 10px;">YashTiles</div>
+                <div style="color: rgba(255,255,255,0.9); font-size: 16px;">Premium Custom Frames</div>
+              </div>
+              
+              <!-- Main Content -->
+              <div style="padding: 40px 30px;">
+                
+                <!-- Greeting -->
+                <div style="margin-bottom: 30px;">
+                  <h1 style="color: #333; font-size: 24px; margin: 0 0 10px 0;">Hello ${firstName}! 👋</h1>
+                  <p style="color: #666; font-size: 16px; margin: 0; line-height: 1.5;">We have an exciting update about your order.</p>
+                </div>
+                
+                <!-- Status Card -->
+                <div style="background-color: ${currentStatus.bgColor}; border-left: 4px solid ${currentStatus.color}; padding: 25px; border-radius: 8px; margin: 30px 0;">
+                  <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                    <span style="font-size: 24px; margin-right: 10px;">${currentStatus.icon}</span>
+                    <h2 style="color: ${currentStatus.color}; margin: 0; font-size: 20px; font-weight: 600;">
+                      Order ${order.status.charAt(0).toUpperCase() + order.status.slice(1)}
+                    </h2>
+                  </div>
+                  <p style="color: #333; font-size: 16px; margin: 0; line-height: 1.6;">${currentStatus.message}</p>
+                </div>
+                
+                <!-- Progress Bar -->
+                <div style="margin: 30px 0;">
+                  <div style="color: #666; font-size: 14px; margin-bottom: 8px;">Order Progress</div>
+                  <div style="background-color: #e0e0e0; height: 8px; border-radius: 4px; overflow: hidden;">
+                    <div style="background: linear-gradient(90deg, #667eea, #764ba2); height: 100%; width: ${progressPercentage}%; transition: width 0.3s ease;"></div>
+                  </div>
+                </div>
+                
+                <!-- Order Details -->
+                <div style="background-color: #f8f9fa; padding: 25px; border-radius: 12px; margin: 30px 0;">
+                  <h3 style="color: #333; margin: 0 0 20px 0; font-size: 18px;">Order Details</h3>
+                  
+                  <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+                    <span style="color: #666; font-weight: 500;">Order Number:</span>
+                    <span style="color: #333; font-weight: 600;">${order.orderNumber}</span>
+                  </div>
+                  
+                  <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+                    <span style="color: #666; font-weight: 500;">Order Date:</span>
+                    <span style="color: #333; font-weight: 600;">${new Date((order as any).createdAt || Date.now()).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                  </div>
+                  
+                  <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+                    <span style="color: #666; font-weight: 500;">Total Amount:</span>
+                    <span style="color: #2e7d32; font-weight: 700; font-size: 16px;">₹${order.totalAmount.toFixed(2)}</span>
+                  </div>
+                  
+                  ${order.trackingNumber ? `
+                  <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
+                    <span style="color: #666; font-weight: 500;">Tracking Number:</span>
+                    <span style="color: #1976d2; font-weight: 600; background-color: #e3f2fd; padding: 4px 8px; border-radius: 4px;">${order.trackingNumber}</span>
+                  </div>
+                  ` : ''}
+                  
+                  ${order.estimatedDelivery ? `
+                  <div style="display: flex; justify-content: space-between;">
+                    <span style="color: #666; font-weight: 500;">Estimated Delivery:</span>
+                    <span style="color: #333; font-weight: 600;">${new Date(order.estimatedDelivery).toLocaleDateString('en-US', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                  </div>
+                  ` : ''}
+                </div>
+                
+                <!-- Order Items -->
+                <div style="margin: 30px 0;">
+                  <h3 style="color: #333; margin: 0 0 20px 0; font-size: 18px;">Your Items</h3>
+                  ${itemsHtml}
+                </div>
+                
+                <!-- Call to Action -->
+                ${order.status === OrderStatus.SHIPPED ? `
+                <div style="text-align: center; margin: 30px 0;">
+                  <a href="#" style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 30px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+                    Track Your Package
+                  </a>
+                </div>
+                ` : ''}
+                
+                <!-- Support Info -->
+                <div style="background-color: #f0f7ff; padding: 20px; border-radius: 8px; margin: 30px 0; border: 1px solid #e3f2fd;">
+                  <div style="display: flex; align-items: center; margin-bottom: 10px;">
+                    <span style="font-size: 18px; margin-right: 8px;">💬</span>
+                    <h4 style="color: #1976d2; margin: 0; font-size: 16px;">Need Help?</h4>
+                  </div>
+                  <p style="color: #666; margin: 0; font-size: 14px; line-height: 1.5;">
+                    Our customer support team is here to help! Contact us at 
+                    <a href="mailto:support@yashtiles.com" style="color: #1976d2; text-decoration: none;">support@yashtiles.com</a> 
+                    or call us at <strong>+91-XXX-XXX-XXXX</strong>
+                  </p>
+                </div>
+                
+              </div>
+              
+              <!-- Footer -->
+              <div style="background-color: #f8f9fa; padding: 30px; text-align: center; border-top: 1px solid #e0e0e0;">
+                <div style="color: #333; font-weight: 600; margin-bottom: 10px;">Thank you for choosing YashTiles!</div>
+                <div style="color: #666; font-size: 14px; margin-bottom: 15px;">Creating beautiful memories, one frame at a time.</div>
+                
+                <!-- Social Links -->
+                <div style="margin: 20px 0;">
+                  <a href="#" style="display: inline-block; margin: 0 10px; color: #666; text-decoration: none;">
+                    📘 Facebook
+                  </a>
+                  <a href="#" style="display: inline-block; margin: 0 10px; color: #666; text-decoration: none;">
+                    📷 Instagram
+                  </a>
+                  <a href="#" style="display: inline-block; margin: 0 10px; color: #666; text-decoration: none;">
+                    🐦 Twitter
+                  </a>
+                </div>
+                
+                <div style="color: #999; font-size: 12px; margin-top: 20px;">
+                  © 2025 YashTiles. All rights reserved.<br>
+                  This email was sent to ${email}
+                </div>
+              </div>
+              
             </div>
-
-            <p>Thank you for choosing Framely!</p>
-            <p>Best regards,<br>The Framely Team</p>
-          </div>
+          </body>
+          </html>
         `,
       };
 
@@ -417,6 +579,19 @@ export class NotificationsService {
     } catch (error) {
       console.error("Failed to send order status update email:", error);
     }
+  }
+
+  private getStatusProgress(status: OrderStatus): number {
+    const progressMap = {
+      [OrderStatus.PENDING]: 20,
+      [OrderStatus.CONFIRMED]: 40,
+      [OrderStatus.PROCESSING]: 60,
+      [OrderStatus.SHIPPED]: 80,
+      [OrderStatus.DELIVERED]: 100,
+      [OrderStatus.CANCELLED]: 0,
+      [OrderStatus.FAILED]: 0,
+    };
+    return progressMap[status] || 0;
   }
 
   async sendPaymentSuccessEmail(
