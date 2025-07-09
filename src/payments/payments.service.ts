@@ -118,9 +118,9 @@ export class PaymentsService {
 
         return { success: true, message: "Payment verified successfully" };
       } else {
-        // Update order payment status to failed
+        // Update order status to FAILED and payment status to FAILED
         await this.ordersService.updateStatus(orderId, {
-          status: OrderStatus.PENDING,
+          status: OrderStatus.FAILED,
           paymentStatus: PaymentStatus.FAILED,
           paymentId: paymentIntentId,
           paymentMethod: "stripe",
@@ -179,9 +179,9 @@ export class PaymentsService {
 
         return { success: true, message: "Payment verified successfully" };
       } else {
-        // Update order payment status to failed
+        // Update order status to FAILED and payment status to FAILED
         await this.ordersService.updateStatus(verifyPaymentDto.orderId, {
-          status: OrderStatus.PENDING,
+          status: OrderStatus.FAILED,
           paymentStatus: PaymentStatus.FAILED,
           paymentId,
           paymentMethod: "razorpay",
@@ -413,7 +413,7 @@ export class PaymentsService {
     if (isValid && body.status === "success") {
       console.log("Payment successful - updating order status");
 
-      // Update order status to CONFIRMED and payment status to PAID
+      // Update order status to CONFIRMED and payment status to PAID for successful payments
       await this.ordersService.updateStatus(order._id.toString(), {
         status: OrderStatus.CONFIRMED,
         paymentStatus: PaymentStatus.PAID,
@@ -441,16 +441,16 @@ export class PaymentsService {
         status: body.status,
         message: "Payment successful and order confirmed",
         orderId: order._id.toString(),
-        txnid: txnid
+        txnid: txnid,
       };
     } else {
       console.log("Payment failed or invalid - updating order status");
       console.log("Hash valid:", isValid);
       console.log("Status:", body.status);
 
-      // Payment failed - update order status
+      // Payment failed - update order status to FAILED and payment status to FAILED
       await this.ordersService.updateStatus(order._id.toString(), {
-        status: OrderStatus.PENDING,
+        status: OrderStatus.FAILED,
         paymentStatus: PaymentStatus.FAILED,
         paymentId: body.payuMoneyId || body.mihpayid || txnid,
         paymentMethod: "payu",
@@ -475,7 +475,7 @@ export class PaymentsService {
         status: body.status,
         message: body.error_Message || body.field9 || "Payment failed",
         orderId: order._id.toString(),
-        txnid: txnid
+        txnid: txnid,
       };
     }
   }

@@ -143,7 +143,9 @@ export class PaymentsController {
       const result = await this.paymentsService.handlePayUCallback(body);
 
       // Get frontend URL from config
-      const frontendUrl = this.configService.get<string>("FRONTEND_URL") || "http://localhost:3001";
+      const frontendUrl =
+        this.configService.get<string>("FRONTEND_URL") ||
+        "http://localhost:3001";
 
       // Redirect to frontend pages based on payment status
       if (result.success) {
@@ -157,7 +159,9 @@ export class PaymentsController {
       }
     } catch (error) {
       console.error("Error in PayU callback:", error);
-      const frontendUrl = this.configService.get<string>("FRONTEND_URL") || "http://localhost:3001";
+      const frontendUrl =
+        this.configService.get<string>("FRONTEND_URL") ||
+        "http://localhost:3001";
       const redirectUrl = `${frontendUrl}/payment-failure?txnid=${body.txnid}&status=error&error=${encodeURIComponent(error.message)}`;
       console.log("Redirecting to error page:", redirectUrl);
       res.redirect(redirectUrl);
@@ -174,7 +178,9 @@ export class PaymentsController {
       const result = await this.paymentsService.handlePayUCallback(query);
 
       // Get frontend URL from config
-      const frontendUrl = this.configService.get<string>("FRONTEND_URL") || "http://localhost:3001";
+      const frontendUrl =
+        this.configService.get<string>("FRONTEND_URL") ||
+        "http://localhost:3001";
 
       // Redirect to frontend pages based on payment status
       if (result.success) {
@@ -188,7 +194,9 @@ export class PaymentsController {
       }
     } catch (error) {
       console.error("Error in PayU callback GET:", error);
-      const frontendUrl = this.configService.get<string>("FRONTEND_URL") || "http://localhost:3001";
+      const frontendUrl =
+        this.configService.get<string>("FRONTEND_URL") ||
+        "http://localhost:3001";
       const redirectUrl = `${frontendUrl}/payment-failure?txnid=${query.txnid}&status=error&error=${encodeURIComponent(error.message)}`;
       console.log("Redirecting to error page:", redirectUrl);
       res.redirect(redirectUrl);
@@ -248,6 +256,9 @@ export class PaymentsController {
   @Get("payu/test")
   @ApiOperation({ summary: "Test PayU endpoint" })
   testPayUEndpoint() {
-    return { message: "PayU endpoint is working", timestamp: new Date().toISOString() };
+    return {
+      message: "PayU endpoint is working",
+      timestamp: new Date().toISOString(),
+    };
   }
 }

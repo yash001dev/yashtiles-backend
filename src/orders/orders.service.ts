@@ -34,10 +34,11 @@ export class OrdersService {
           status: OrderStatus.PENDING,
           timestamp: new Date(),
         },
-      ],    });
+      ],
+    });
     const savedOrder = await order.save();
     // Note: productId is now a string identifier, not a Product reference
-    
+
     // Send order confirmation email only if sendEmail is true
     if (sendEmail) {
       await this.notificationsService.sendOrderConfirmationEmail(
@@ -92,9 +93,7 @@ export class OrdersService {
       filter.userId = userId;
     }
 
-    const order = await this.orderModel
-      .findOne(filter)
-      .exec();
+    const order = await this.orderModel.findOne(filter).exec();
 
     if (!order) {
       throw new NotFoundException("Order not found");
@@ -121,6 +120,19 @@ export class OrdersService {
 
     // Update current status
     order.status = updateOrderStatusDto.status;
+
+    // Update payment-related fields if provided
+    if (updateOrderStatusDto.paymentStatus !== undefined) {
+      order.paymentStatus = updateOrderStatusDto.paymentStatus;
+    }
+
+    if (updateOrderStatusDto.paymentId) {
+      order.paymentId = updateOrderStatusDto.paymentId;
+    }
+
+    if (updateOrderStatusDto.paymentMethod) {
+      order.paymentMethod = updateOrderStatusDto.paymentMethod;
+    }
 
     if (updateOrderStatusDto.trackingNumber) {
       order.trackingNumber = updateOrderStatusDto.trackingNumber;

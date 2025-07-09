@@ -1,41 +1,44 @@
-import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
-import { Document, Types } from 'mongoose';
+import { Prop, Schema, SchemaFactory } from "@nestjs/mongoose";
+import { Document, Types } from "mongoose";
 
 export type OrderDocument = Order & Document;
 
 export enum OrderStatus {
-  PENDING = 'pending',
-  CONFIRMED = 'confirmed',
-  PROCESSING = 'processing',
-  SHIPPED = 'shipped',
-  DELIVERED = 'delivered',
-  CANCELLED = 'cancelled',
+  PENDING = "pending",
+  CONFIRMED = "confirmed",
+  PROCESSING = "processing",
+  SHIPPED = "shipped",
+  DELIVERED = "delivered",
+  CANCELLED = "cancelled",
+  FAILED = "failed",
 }
 
 export enum PaymentStatus {
-  PENDING = 'pending',
-  PAID = 'paid',
-  FAILED = 'failed',
-  REFUNDED = 'refunded',
+  PENDING = "pending",
+  PAID = "paid",
+  FAILED = "failed",
+  REFUNDED = "refunded",
 }
 
 @Schema({ timestamps: true })
 export class Order {
-  @Prop({ type: Types.ObjectId, ref: 'User', required: true })
+  @Prop({ type: Types.ObjectId, ref: "User", required: true })
   userId: Types.ObjectId;
 
   @Prop({ required: true, unique: true })
   orderNumber: string;
 
-  @Prop([{
-    productId: { type: String, required: true },
-    quantity: { type: Number, required: true, min: 1 },
-    price: { type: Number, required: true },
-    size: { type: String, required: true },
-    frameType: { type: String, required: true },
-    imageUrl: { type: String, required: true },
-    notes: String,
-  }])
+  @Prop([
+    {
+      productId: { type: String, required: true },
+      quantity: { type: Number, required: true, min: 1 },
+      price: { type: Number, required: true },
+      size: { type: String, required: true },
+      frameType: { type: String, required: true },
+      imageUrl: { type: String, required: true },
+      notes: String,
+    },
+  ])
   items: Array<{
     productId: String;
     quantity: number;
@@ -113,11 +116,13 @@ export class Order {
   @Prop()
   notes?: string;
 
-  @Prop([{
-    status: { type: String, enum: OrderStatus },
-    timestamp: { type: Date, default: Date.now },
-    notes: String,
-  }])
+  @Prop([
+    {
+      status: { type: String, enum: OrderStatus },
+      timestamp: { type: Date, default: Date.now },
+      notes: String,
+    },
+  ])
   statusHistory: Array<{
     status: OrderStatus;
     timestamp: Date;
