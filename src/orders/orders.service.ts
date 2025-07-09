@@ -8,6 +8,9 @@ import { Model } from "mongoose";
 import { Order, OrderDocument, OrderStatus } from "./schemas/order.schema";
 import { CreateOrderDto } from "./dto/create-order.dto";
 import { UpdateOrderStatusDto } from "./dto/update-order-status.dto";
+import { BulkUpdateOrderDto } from "./dto/bulk-update-order.dto";
+import { UpdateOrderDto } from "./dto/update-order.dto";
+import { SearchOrderDto } from "./dto/search-order.dto";
 import { PaginationDto } from "../common/dto/pagination.dto";
 import { NotificationsService } from "../notifications/notifications.service";
 
@@ -47,15 +50,6 @@ export class OrdersService {
         savedOrder
       );
     }
-
-    // Send WhatsApp notification - COMMENTED OUT FOR NOW
-    // if (savedOrder.shippingAddress.phone) {
-    //   await this.notificationsService.sendOrderConfirmationWhatsApp(
-    //     savedOrder.shippingAddress.phone,
-    //     savedOrder.shippingAddress.firstName,
-    //     savedOrder.orderNumber,
-    //   );
-    // }
 
     return savedOrder;
   }
@@ -147,24 +141,13 @@ export class OrdersService {
     }
 
     const updatedOrder = await order.save();
-    // Note: productId is now a string identifier, not a Product reference
 
-    // Send status update notifications
+    // Send status update email
     await this.notificationsService.sendOrderStatusUpdateEmail(
-      updatedOrder.shippingAddress.email,
-      updatedOrder.shippingAddress.firstName,
-      updatedOrder
+      order.shippingAddress.email,
+      order.shippingAddress.firstName,
+      order
     );
-
-    // Send WhatsApp notification - COMMENTED OUT FOR NOW
-    // if (updatedOrder.shippingAddress.phone) {
-    //   await this.notificationsService.sendOrderStatusUpdateWhatsApp(
-    //     updatedOrder.shippingAddress.phone,
-    //     updatedOrder.shippingAddress.firstName,
-    //     updatedOrder.orderNumber,
-    //     updatedOrder.status,
-    //   );
-    // }
 
     return updatedOrder;
   }
@@ -194,9 +177,200 @@ export class OrdersService {
     };
   }
 
+  async bulkUpdateOrders(bulkUpdateOrderDto: BulkUpdateOrderDto): Promise<{ updated: number; failed: string[] }> {
+    const { orderIds, status, paymentStatus, trackingNumber, notes } = bulkUpdateOrderDto;
+    const failed: string[] = [];
+    let updated = 0;
+
+    for (const orderId of orderIds) {
+      try {
+        const order = await this.orderModel.findById(orderId).exec();
+        if (!order) {
+          failed.push(`Order ${orderId} not found`);
+          continue;
+        }
+
+        const updateData: any = {};
+        
+        if (status !== undefined) {
+          updateData.status = status;
+          // Add to status history
+          order.statusHistory.push({
+            status,
+            timestamp: new Date(),
+            notes,
+          });
+        }
+
+        if (paymentStatus !== undefined) {
+          updateData.paymentStatus = paymentStatus;
+        }
+
+        if (trackingNumber !== undefined) {
+          updateData.trackingNumber = trackingNumber;
+        }
+
+        await this.orderModel.findByIdAndUpdate(orderId, updateData).exec();
+        await order.save();
+        updated++;
+      } catch (error) {
+        failed.push(`Order ${orderId}: ${error.message}`);
+      }
+    }
+
+    return { updated, failed };
+  }
+
+  async updateOrder(id: string, updateOrderDto: UpdateOrderDto): Promise<Order> {
+    const order = await this.orderModel.findById(id).exec();
+    if (!order) {
+      throw new NotFoundException("Order not found");
+    }
+
+    const updateData: any = {};
+
+    // Handle status update with history
+    if (updateOrderDto.status !== undefined) {
+      updateData.status = updateOrderDto.status;
+      order.statusHistory.push({
+        status: updateOrderDto.status,
+        timestamp: new Date(),
+        notes: updateOrderDto.statusNotes,
+      });
+    }
+
+    // Handle other simple fields
+    const simpleFields = [
+      'paymentStatus', 'totalAmount', 'shippingCost', 'taxAmount',
+      'paymentId', 'paymentMethod', 'trackingNumber', 'estimatedDelivery', 'notes'
+    ];
+
+    simpleFields.forEach(field => {
+      if (updateOrderDto[field] !== undefined) {
+        updateData[field] = updateOrderDto[field];
+      }
+    });
+
+    // Handle shipping address update
+    if (updateOrderDto.shippingAddress) {
+      const currentShippingAddress = order.shippingAddress;
+      updateData.shippingAddress = {
+        ...currentShippingAddress,
+        ...updateOrderDto.shippingAddress
+      };
+    }
+
+    // Handle items update
+    if (updateOrderDto.items) {
+      updateData.items = updateOrderDto.items.map((item, index) => {
+        const currentItem = order.items[index] || {};
+        return {
+          ...currentItem,
+          ...item
+        };
+      });
+    }
+
+    const updatedOrder = await this.orderModel.findByIdAndUpdate(
+      id,
+      updateData,
+      { new: true }
+    ).exec();
+
+    await order.save(); // Save status history changes
+
+    return updatedOrder;
+  }
+
+  async searchOrders(searchOrderDto: SearchOrderDto) {
+    const { 
+      page, limit, orderNumber, customerEmail, customerName, customerPhone,
+      status, paymentStatus, fromDate, toDate, trackingNumber, minAmount, maxAmount 
+    } = searchOrderDto;
+    
+    const skip = (page - 1) * limit;
+    const filter: any = {};
+
+    // Build search filters
+    if (orderNumber) {
+      filter.orderNumber = { $regex: orderNumber, $options: 'i' };
+    }
+
+    if (customerEmail) {
+      filter['shippingAddress.email'] = { $regex: customerEmail, $options: 'i' };
+    }
+
+    if (customerName) {
+      filter.$or = [
+        { 'shippingAddress.firstName': { $regex: customerName, $options: 'i' } },
+        { 'shippingAddress.lastName': { $regex: customerName, $options: 'i' } }
+      ];
+    }
+
+    if (customerPhone) {
+      filter['shippingAddress.phone'] = { $regex: customerPhone, $options: 'i' };
+    }
+
+    if (status) {
+      filter.status = status;
+    }
+
+    if (paymentStatus) {
+      filter.paymentStatus = paymentStatus;
+    }
+
+    if (trackingNumber) {
+      filter.trackingNumber = { $regex: trackingNumber, $options: 'i' };
+    }
+
+    // Date range filter
+    if (fromDate || toDate) {
+      filter.createdAt = {};
+      if (fromDate) {
+        filter.createdAt.$gte = new Date(fromDate);
+      }
+      if (toDate) {
+        const endDate = new Date(toDate);
+        endDate.setHours(23, 59, 59, 999); // End of day
+        filter.createdAt.$lte = endDate;
+      }
+    }
+
+    // Amount range filter
+    if (minAmount !== undefined || maxAmount !== undefined) {
+      filter.totalAmount = {};
+      if (minAmount !== undefined) {
+        filter.totalAmount.$gte = minAmount;
+      }
+      if (maxAmount !== undefined) {
+        filter.totalAmount.$lte = maxAmount;
+      }
+    }
+
+    const [orders, total] = await Promise.all([
+      this.orderModel
+        .find(filter)
+        .skip(skip)
+        .limit(limit)
+        .sort({ createdAt: -1 })
+        .exec(),
+      this.orderModel.countDocuments(filter),
+    ]);
+
+    return {
+      orders,
+      pagination: {
+        page,
+        limit,
+        total,
+        pages: Math.ceil(total / limit),
+      },
+    };
+  }
+
   private async generateOrderNumber(): Promise<string> {
     const date = new Date();
-    const year = date.getFullYear().toString().slice(-2);
+    const year = date.getFullYear().toString();
     const month = (date.getMonth() + 1).toString().padStart(2, "0");
     const day = date.getDate().toString().padStart(2, "0");
 

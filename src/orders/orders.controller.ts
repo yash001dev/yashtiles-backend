@@ -8,11 +8,15 @@ import {
   Query,
   UseGuards,
   Req,
+  Put,
 } from '@nestjs/common';
 import { ApiTags, ApiOperation, ApiBearerAuth, ApiQuery } from '@nestjs/swagger';
 import { OrdersService } from './orders.service';
 import { CreateOrderDto } from './dto/create-order.dto';
 import { UpdateOrderStatusDto } from './dto/update-order-status.dto';
+import { BulkUpdateOrderDto } from './dto/bulk-update-order.dto';
+import { UpdateOrderDto } from './dto/update-order.dto';
+import { SearchOrderDto } from './dto/search-order.dto';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../common/guards/roles.guard';
@@ -73,5 +77,35 @@ export class OrdersController {
     @Body() updateOrderStatusDto: UpdateOrderStatusDto,
   ) {
     return this.ordersService.updateStatus(id, updateOrderStatusDto);
+  }
+
+  @Put('bulk-update')
+  @ApiOperation({ summary: 'Bulk update multiple orders' })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @ApiBearerAuth('JWT-auth')
+  bulkUpdateOrders(@Body() bulkUpdateOrderDto: BulkUpdateOrderDto) {
+    return this.ordersService.bulkUpdateOrders(bulkUpdateOrderDto);
+  }
+
+  @Put(':id')
+  @ApiOperation({ summary: 'Update order details (admin only)' })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @ApiBearerAuth('JWT-auth')
+  updateOrder(
+    @Param('id') id: string,
+    @Body() updateOrderDto: UpdateOrderDto,
+  ) {
+    return this.ordersService.updateOrder(id, updateOrderDto);
+  }
+
+  @Get('admin/search')
+  @ApiOperation({ summary: 'Search orders with filters (admin only)' })
+  @UseGuards(JwtAuthGuard, RolesGuard)
+  @Roles(UserRole.ADMIN)
+  @ApiBearerAuth('JWT-auth')
+  searchOrders(@Query() searchOrderDto: SearchOrderDto) {
+    return this.ordersService.searchOrders(searchOrderDto);
   }
 }
