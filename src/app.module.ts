@@ -13,6 +13,7 @@ import { NotificationsModule } from "./notifications/notifications.module";
 import { UploadsModule } from "./uploads/uploads.module";
 import { AdminModule } from "./admin/admin.module";
 import { S3Module } from "./s3/s3.module";
+import { HealthController } from "./health.controller";
 
 @Module({
   imports: [
@@ -50,5 +51,6 @@ import { S3Module } from "./s3/s3.module";
     AdminModule,
     S3Module,
   ],
+  controllers: [HealthController],
 })
 export class AppModule {}

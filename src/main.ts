@@ -10,7 +10,13 @@ import { NestExpressApplication } from "@nestjs/platform-express";
 import { join } from "path";
 
 async function bootstrap() {
-  const app = await NestFactory.create<NestExpressApplication>(AppModule);
+  const app = await NestFactory.create<NestExpressApplication>(AppModule, {
+    cors: {
+      origin: "*",
+      methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
+      credentials: true,
+    },
+  });
   const configService = app.get(ConfigService);
 
   // Serve static files from public directory
@@ -20,14 +26,6 @@ async function bootstrap() {
   app.use(helmet());
   app.use(compression());
   app.use(cookieParser());
-
-  // CORS configuration
-  app.enableCors({
-    origin: [configService.get("FRONTEND_URL"), "http://localhost:3001"],
-    credentials: true,
-    methods: ["GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"],
-    allowedHeaders: ["Content-Type", "Authorization", "Accept"],
-  });
 
   // Global validation pipe
   app.useGlobalPipes(
@@ -81,8 +79,9 @@ async function bootstrap() {
   });
 
   const port = configService.get("PORT") || 3000;
-  await app.listen(port);
-
+  await app.listen(port, "0.0.0.0");
+  //For Checking health endpoint
+  console.log(`🌟 Framely API is running on port: ${port}`);
   console.log(`🚀 Framely API is running on: http://localhost:${port}`);
   console.log(`📚 API Documentation: http://localhost:${port}/api/docs`);
 }
