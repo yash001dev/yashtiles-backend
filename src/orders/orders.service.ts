@@ -6,6 +6,7 @@ import {
 import { InjectModel } from "@nestjs/mongoose";
 import { Model } from "mongoose";
 import { Order, OrderDocument, OrderStatus } from "./schemas/order.schema";
+import { Counter } from "./schemas/counter.schema";
 import { CreateOrderDto } from "./dto/create-order.dto";
 import { UpdateOrderStatusDto } from "./dto/update-order-status.dto";
 import { BulkUpdateOrderDto } from "./dto/bulk-update-order.dto";
@@ -18,6 +19,7 @@ import { NotificationsService } from "../notifications/notifications.service";
 export class OrdersService {
   constructor(
     @InjectModel(Order.name) private orderModel: Model<OrderDocument>,
+    @InjectModel(Counter.name) private counterModel: Model<Counter>,
     private notificationsService: NotificationsService
   ) {}
 
@@ -433,21 +435,22 @@ export class OrdersService {
     };
   }
 
+  // Atomic daily order number generator using a counters collection
   private async generateOrderNumber(): Promise<string> {
     const date = new Date();
     const year = date.getFullYear().toString();
     const month = (date.getMonth() + 1).toString().padStart(2, "0");
     const day = date.getDate().toString().padStart(2, "0");
+    const todayKey = `${year}${month}${day}`;
 
-    const count = await this.orderModel.countDocuments({
-      createdAt: {
-        $gte: new Date(date.getFullYear(), date.getMonth(), date.getDate()),
-        $lt: new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1),
-      },
-    });
-
-    const sequence = (count + 1).toString().padStart(4, "0");
-    return `FR${year}${month}${day}${sequence}`;
+    // Atomically increment the counter for today
+    const counterDoc = await this.counterModel.findOneAndUpdate(
+      { _id: `orderNumber_${todayKey}` },
+      { $inc: { seq: 1 } },
+      { new: true, upsert: true }
+    );
+    const sequence = counterDoc.seq.toString().padStart(4, "0");
+    return `FR${todayKey}${sequence}`;
   }
 
   async getOrderByTxnId(txnid: string): Promise<OrderDocument | null> {
