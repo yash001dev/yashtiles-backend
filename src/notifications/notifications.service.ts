@@ -968,4 +968,47 @@ export class NotificationsService {
       console.error("Failed to send contact inquiry thank-you email:", error);
     }
   }
+
+  async sendNewsletterThankYouEmail(email: string) {
+    try {
+      const mailOptions = {
+        from: `${this.configService.get<string>("FROM_NAME")} <${this.configService.get<string>("FROM_EMAIL")}>`,
+        to: email,
+        subject: `Thank you for subscribing to our newsletter!`,
+        html: `
+          <div style="background: #f6f8fa; padding: 40px 0; font-family: 'Segoe UI', Arial, sans-serif;">
+            <div style="max-width: 480px; margin: 0 auto; background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.07); overflow: hidden;">
+              <div style="background: linear-gradient(90deg, #2563eb 0%, #10b981 100%); padding: 32px 0; text-align: center;">
+                <h1 style="color: #fff; font-size: 2rem; margin: 0;">Welcome to Our Newsletter!</h1>
+              </div>
+              <div style="padding: 32px 24px;">
+                <p style="font-size: 1.1rem; color: #222; margin-bottom: 18px;">
+                  Thank you for subscribing to PhotoFramix updates.
+                </p>
+                <p style="font-size: 1rem; color: #444; margin-bottom: 18px;">
+                  You'll be the first to know about our latest products, offers, and inspiration for your next frame!
+                </p>
+                <div style="background: #f1f5f9; border-radius: 8px; padding: 18px 0; text-align: center; margin-bottom: 24px;">
+                  <span style="color: #64748b; font-size: 0.95rem;">Stay tuned for updates in your inbox.</span>
+                </div>
+                <p style="font-size: 1rem; color: #444; margin-bottom: 0;">
+                  If you have any questions, just reply to this email.
+                </p>
+                <p style="font-size: 1rem; color: #444; margin-top: 24px;">
+                  Best regards,<br>
+                  <span style="color: #2563eb; font-weight: 500;">The PhotoFramix Team</span>
+                </p>
+              </div>
+              <div style="background: #f1f5f9; text-align: center; padding: 16px; font-size: 0.95rem; color: #64748b;">
+                © ${new Date().getFullYear()} PhotoFramix. All rights reserved.
+              </div>
+            </div>
+          </div>
+        `,
+      };
+      await this.transporter.sendMail(mailOptions);
+    } catch (error) {
+      console.error("Failed to send newsletter thank-you email:", error);
+    }
+  }
 }

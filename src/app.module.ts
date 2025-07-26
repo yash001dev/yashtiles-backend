@@ -15,6 +15,7 @@ import { AdminModule } from "./admin/admin.module";
 import { S3Module } from "./s3/s3.module";
 import { HealthController } from "./health.controller";
 import { ContactInquiryModule } from './contact-inquiry/contact-inquiry.module';
+import { NewsletterModule } from './newsletter/newsletter.module';
 
 @Module({
   imports: [
@@ -52,6 +53,7 @@ import { ContactInquiryModule } from './contact-inquiry/contact-inquiry.module';
     AdminModule,
     S3Module,
     ContactInquiryModule,
+    NewsletterModule,
   ],
   controllers: [HealthController],
 })
