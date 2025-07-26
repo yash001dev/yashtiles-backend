@@ -48,7 +48,7 @@ async function bootstrap() {
 
   // Swagger documentation
   const config = new DocumentBuilder()
-    .setTitle("Framely API")
+    .setTitle("Photoframix API")
     .setDescription("Custom Photo Frame Backend API Documentation")
     .setVersion("1.0")
     .addBearerAuth(
@@ -85,8 +85,8 @@ async function bootstrap() {
   const port = configService.get("PORT") || 3000;
   await app.listen(port, "0.0.0.0");
   //For Checking health endpoint
-  console.log(`🌟 Framely API is running on port: ${port}`);
-  console.log(`🚀 Framely API is running on: http://localhost:${port}`);
+  console.log(`🌟 Photoframix API is running on port: ${port}`);
+  console.log(`🚀 Photoframix API is running on: http://localhost:${port}`);
   console.log(`📚 API Documentation: http://localhost:${port}/api/docs`);
 }
 
