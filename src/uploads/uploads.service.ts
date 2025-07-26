@@ -13,7 +13,7 @@ export class UploadsService {
     });
   }
 
-  async uploadImage(file: Express.Multer.File, folder: string = 'framely'): Promise<UploadApiResponse> {
+  async uploadImage(file: Express.Multer.File, folder: string = 'photoframix'): Promise<UploadApiResponse> {
     try {
       const result = await cloudinary.uploader.upload(file.path || `data:${file.mimetype};base64,${file.buffer.toString('base64')}`, {
         folder,
@@ -31,7 +31,7 @@ export class UploadsService {
     }
   }
 
-  async uploadMultipleImages(files: Express.Multer.File[], folder: string = 'framely'): Promise<UploadApiResponse[]> {
+  async uploadMultipleImages(files: Express.Multer.File[], folder: string = 'photoframix'): Promise<UploadApiResponse[]> {
     try {
       const uploadPromises = files.map(file => this.uploadImage(file, folder));
       return Promise.all(uploadPromises);

@@ -922,4 +922,50 @@ export class NotificationsService {
     }
   }
   */
+
+  async sendContactInquiryThankYouEmail(email: string, firstName: string, ticketNumber: string) {
+    try {
+      const mailOptions = {
+        from: `${this.configService.get<string>("FROM_NAME")} <${this.configService.get<string>("FROM_EMAIL")}>`,
+        to: email,
+        subject: `Thank you for contacting us (Ticket #${ticketNumber})`,
+        html: `
+          <div style="background: #f6f8fa; padding: 40px 0; font-family: 'Segoe UI', Arial, sans-serif;">
+            <div style="max-width: 480px; margin: 0 auto; background: #fff; border-radius: 12px; box-shadow: 0 2px 12px rgba(0,0,0,0.07); overflow: hidden;">
+              <div style="background: linear-gradient(90deg, #10b981 0%, #2563eb 100%); padding: 32px 0; text-align: center;">
+                <h1 style="color: #fff; font-size: 2rem; margin: 0;">Thank You for Contacting Us!</h1>
+              </div>
+              <div style="padding: 32px 24px;">
+                <p style="font-size: 1.1rem; color: #222; margin-bottom: 18px;">
+                  Hi <strong style="color: #2563eb;">${firstName}</strong>,
+                </p>
+                <p style="font-size: 1rem; color: #444; margin-bottom: 18px;">
+                  We’ve received your inquiry and our team will reach out to you as soon as possible.
+                </p>
+                <div style="background: #f1f5f9; border-radius: 8px; padding: 18px 0; text-align: center; margin-bottom: 24px;">
+                  <span style="color: #64748b; font-size: 0.95rem;">Your Ticket Number</span>
+                  <div style="font-size: 1.3rem; font-weight: 600; color: #10b981; margin-top: 4px; letter-spacing: 1px;">
+                    ${ticketNumber}
+                  </div>
+                </div>
+                <p style="font-size: 1rem; color: #444; margin-bottom: 0;">
+                  If you have any additional information or questions, just reply to this email.
+                </p>
+                <p style="font-size: 1rem; color: #444; margin-top: 24px;">
+                  Best regards,<br>
+                  <span style="color: #2563eb; font-weight: 500;">The YashTiles Team</span>
+                </p>
+              </div>
+              <div style="background: #f1f5f9; text-align: center; padding: 16px; font-size: 0.95rem; color: #64748b;">
+                © ${new Date().getFullYear()} PhotoFramix. All rights reserved.
+              </div>
+            </div>
+          </div>
+        `,
+      };
+      await this.transporter.sendMail(mailOptions);
+    } catch (error) {
+      console.error("Failed to send contact inquiry thank-you email:", error);
+    }
+  }
 }

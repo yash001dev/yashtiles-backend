@@ -14,6 +14,7 @@ import { UploadsModule } from "./uploads/uploads.module";
 import { AdminModule } from "./admin/admin.module";
 import { S3Module } from "./s3/s3.module";
 import { HealthController } from "./health.controller";
+import { ContactInquiryModule } from './contact-inquiry/contact-inquiry.module';
 
 @Module({
   imports: [
@@ -50,6 +51,7 @@ import { HealthController } from "./health.controller";
     UploadsModule,
     AdminModule,
     S3Module,
+    ContactInquiryModule,
   ],
   controllers: [HealthController],
 })
