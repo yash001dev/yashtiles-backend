@@ -15,7 +15,8 @@ async function bootstrap() {
       origin: [
         "http://localhost:3000",
         "http://localhost:3001",
-        "https://stage.photoframix.com"
+        "https://stage.photoframix.com",
+        "https://photoframix.com"
       ],
       methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
       credentials: true,
