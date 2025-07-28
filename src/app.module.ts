@@ -16,6 +16,10 @@ import { S3Module } from "./s3/s3.module";
 import { HealthController } from "./health.controller";
 import { ContactInquiryModule } from './contact-inquiry/contact-inquiry.module';
 import { NewsletterModule } from './newsletter/newsletter.module';
+import { MaterialModule } from './material/material.module';
+import { FrameModule } from './frame/frame.module';
+import { SizeModule } from './size/size.module';
+import { HangTypeModule } from './hang-type/hang-type.module';
 
 @Module({
   imports: [
@@ -54,6 +58,10 @@ import { NewsletterModule } from './newsletter/newsletter.module';
     S3Module,
     ContactInquiryModule,
     NewsletterModule,
+    MaterialModule,
+    FrameModule,
+    SizeModule,
+    HangTypeModule,
   ],
   controllers: [HealthController],
 })
