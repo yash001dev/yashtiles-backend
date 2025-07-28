@@ -34,7 +34,7 @@
             font-size: 16px;
         }
         button {
-            background-color: #3498db;
+            background: linear-gradient(90deg, #ec4899 0%, #f472b6 100%);
             color: white;
             padding: 12px 24px;
             border: none;
@@ -43,9 +43,11 @@
             font-size: 16px;
             margin-right: 10px;
             margin-bottom: 10px;
+            font-weight: bold;
+            box-shadow: 0 3px 10px rgba(236, 72, 153, 0.15);
         }
         button:hover {
-            background-color: #2980b9;
+            background: linear-gradient(90deg, #f472b6 0%, #ec4899 100%);
         }
         .success {
             background-color: #d4edda;
@@ -78,17 +80,18 @@
             font-family: monospace;
         }
         .instructions {
-            background-color: #e7f3ff;
+            background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%);
             padding: 15px;
             border-radius: 5px;
             margin-bottom: 20px;
-            border-left: 4px solid #3498db;
+            border-left: 4px solid #ec4899;
         }
     </style>
 </head>
 <body>
     <div class="container">
-        <h1>🖼️ Photoframix - Email Verification Test</h1>
+        <img src="https://frameit-website-assets.s3.ap-south-1.amazonaws.com/favicon.svg" alt="PhotoFramix Logo" style="height: 48px; margin-bottom: 16px;" />
+        <h1 style="color: #ec4899;">🖼️ PhotoFramix - Email Verification Test</h1>
         
         <div class="instructions">
             <h3>📧 Test Email Verification Flow</h3>

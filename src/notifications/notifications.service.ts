@@ -58,12 +58,13 @@ export class NotificationsService {
       const mailOptions = {
         from: `${this.configService.get<string>("FROM_NAME")} <${this.configService.get<string>("FROM_EMAIL")}>`,
         to: email,
-        subject: "Welcome to Framely! Please verify your email",
+        subject: "Welcome to PhotoFramix! Please verify your email",
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f9f9f9; padding: 20px;">
             <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
               <div style="text-align: center; margin-bottom: 30px;">
-                <h1 style="color: #2c3e50; margin: 0; font-size: 28px;">Welcome to Framely! 🖼️</h1>
+                <img src="https://frameit-website-assets.s3.ap-south-1.amazonaws.com/favicon.svg" alt="PhotoFramix Logo" style="height: 48px; margin-bottom: 16px;" />
+                <h1 style="color: #ec4899; margin: 0; font-size: 28px;">Welcome to PhotoFramix! 🖼️</h1>
               </div>
               
               <div style="margin-bottom: 30px;">
@@ -76,10 +77,10 @@ export class NotificationsService {
               <div style="background-color: #f8f9fa; padding: 20px; border-radius: 8px; margin: 30px 0; border-left: 4px solid #3498db;">
                 <h3 style="color: #2c3e50; margin-top: 0; font-size: 18px;">📧 Please verify your email address</h3>
                 <p style="color: #555; margin-bottom: 20px;">
-                  To complete your registration and start using Framely, please verify your email address by clicking the button below:
+                  To complete your registration and start using PhotoFramix, please verify your email address by clicking the button below:
                 </p>
                 <div style="text-align: center; margin: 25px 0;">
-                  <a href="${verificationUrl}" style="background-color: #3498db; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; display: inline-block; font-weight: bold; font-size: 16px; box-shadow: 0 3px 10px rgba(52, 152, 219, 0.3);">
+                  <a href="${verificationUrl}" style="background: linear-gradient(90deg, #ec4899 0%, #f472b6 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; display: inline-block; font-weight: bold; font-size: 16px; box-shadow: 0 3px 10px rgba(236, 72, 153, 0.3);">
                     ✅ Verify Email Address
                   </a>
                 </div>
@@ -89,7 +90,7 @@ export class NotificationsService {
               </div>
 
               <div style="margin-top: 30px;">
-                <h3 style="color: #2c3e50; font-size: 18px;">🎨 What you can do with Framely:</h3>
+                <h3 style="color: #ec4899; font-size: 18px;">🎨 What you can do with PhotoFramix:</h3>
                 <ul style="color: #555; padding-left: 20px;">
                   <li>Create beautiful custom photo frames</li>
                   <li>Upload and edit your favorite photos</li>
@@ -110,7 +111,7 @@ export class NotificationsService {
               <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
                 <p style="color: #555; font-size: 16px; margin: 0;">
                   Welcome aboard!<br>
-                  <strong>The Framely Team</strong> 📸
+                  <strong>The PhotoFramix Team</strong> 🖼️
                 </p>
               </div>
             </div>
@@ -135,7 +136,7 @@ export class NotificationsService {
       const mailOptions = {
         from: `${this.configService.get<string>("FROM_NAME")} <${this.configService.get<string>("FROM_EMAIL")}>`,
         to: email,
-        subject: "Verify your Framely email address",
+        subject: "Verify your PhotoFramix email address",
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f9f9f9; padding: 20px;">
             <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
@@ -146,12 +147,12 @@ export class NotificationsService {
               <div style="margin-bottom: 30px;">
                 <h2 style="color: #34495e; font-size: 18px;">Hi ${firstName}!</h2>
                 <p style="color: #555; font-size: 16px; line-height: 1.6;">
-                  Please verify your email address to complete your account setup and access all Framely features.
+                  Please verify your email address to complete your account setup and access all PhotoFramix features.
                 </p>
               </div>
 
               <div style="text-align: center; margin: 30px 0;">
-                <a href="${verificationUrl}" style="background-color: #3498db; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; display: inline-block; font-weight: bold; font-size: 16px; box-shadow: 0 3px 10px rgba(52, 152, 219, 0.3);">
+                <a href="${verificationUrl}" style="background: linear-gradient(90deg, #ec4899 0%, #f472b6 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; display: inline-block; font-weight: bold; font-size: 16px; box-shadow: 0 3px 10px rgba(236, 72, 153, 0.3);">
                   ✅ Verify Email Address
                 </a>
               </div>
@@ -174,7 +175,7 @@ export class NotificationsService {
               <div style="text-align: center; margin-top: 30px;">
                 <p style="color: #555; font-size: 14px; margin: 0;">
                   Best regards,<br>
-                  <strong>The Framely Team</strong>
+                  <strong>The PhotoFramix Team</strong>
                 </p>
               </div>
             </div>
@@ -204,7 +205,7 @@ export class NotificationsService {
               <div style="margin-bottom: 30px;">
                 <h2 style="color: #34495e; font-size: 20px;">Congratulations ${firstName}!</h2>
                 <p style="color: #555; font-size: 16px; line-height: 1.6;">
-                  Your email has been successfully verified! You now have full access to all Framely features.
+                  Your email has been successfully verified! You now have full access to all PhotoFramix features.
                 </p>
               </div>
 
@@ -216,7 +217,7 @@ export class NotificationsService {
               </div>
 
               <div style="text-align: center; margin: 30px 0;">
-                <a href="${this.configService.get<string>("FRONTEND_URL")}" style="background-color: #27ae60; color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; display: inline-block; font-weight: bold; font-size: 16px; box-shadow: 0 3px 10px rgba(39, 174, 96, 0.3);">
+                <a href="${this.configService.get<string>("FRONTEND_URL")}" style="background: linear-gradient(90deg, #ec4899 0%, #f472b6 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 25px; display: inline-block; font-weight: bold; font-size: 16px; box-shadow: 0 3px 10px rgba(236, 72, 153, 0.3);">
                   🖼️ Start Creating Frames
                 </a>
               </div>
@@ -224,7 +225,7 @@ export class NotificationsService {
               <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #eee;">
                 <p style="color: #555; font-size: 16px; margin: 0;">
                   Happy framing!<br>
-                  <strong>The Framely Team</strong> 📸
+                  <strong>The PhotoFramix Team</strong> 🖼️
                 </p>
               </div>
             </div>
@@ -249,19 +250,19 @@ export class NotificationsService {
       const mailOptions = {
         from: `${this.configService.get<string>("FROM_NAME")} <${this.configService.get<string>("FROM_EMAIL")}>`,
         to: email,
-        subject: "Reset Your Framely Password",
+        subject: "Reset Your PhotoFramix Password",
         html: `
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <h1 style="color: #333;">Password Reset Request</h1>
             <p>Hi ${firstName},</p>
-            <p>You requested to reset your password for your Framely account.</p>
+            <p>You requested to reset your password for your PhotoFramix account.</p>
             <p>Click the button below to reset your password:</p>
             <div style="text-align: center; margin: 30px 0;">
-              <a href="${resetUrl}" style="background-color: #007bff; color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block;">Reset Password</a>
+              <a href="${resetUrl}" style="background: linear-gradient(90deg, #ec4899 0%, #f472b6 100%); color: white; padding: 12px 24px; text-decoration: none; border-radius: 5px; display: inline-block; font-weight: bold; font-size: 16px; box-shadow: 0 3px 10px rgba(236, 72, 153, 0.3);">Reset Password</a>
             </div>
             <p>This link will expire in 10 minutes for security reasons.</p>
             <p>If you didn't request this password reset, please ignore this email.</p>
-            <p>Best regards,<br>The Framely Team</p>
+            <p>Best regards,<br>The PhotoFramix Team</p>
           </div>
         `,
       };
@@ -282,9 +283,9 @@ export class NotificationsService {
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <h1 style="color: #333;">Password Changed</h1>
             <p>Hi ${firstName},</p>
-            <p>Your Framely account password has been successfully changed.</p>
+            <p>Your PhotoFramix account password has been successfully changed.</p>
             <p>If you didn't make this change, please contact our support team immediately.</p>
-            <p>Best regards,<br>The Framely Team</p>
+            <p>Best regards,<br>The PhotoFramix Team</p>
           </div>
         `,
       };
@@ -332,7 +333,7 @@ export class NotificationsService {
             <p>Hi ${firstName},</p>
             <p>Thank you for your order! We've received your order and will start processing it soon.</p>
             
-            <div style="background-color: #f8f9fa; padding: 20px; border-radius: 5px; margin: 20px 0;">
+            <div style="background: linear-gradient(90deg, #fce7f3 0%, #fbcfe8 100%); padding: 20px; border-radius: 5px; margin: 20px 0; border-left: 4px solid #ec4899;">
               <h3 style="margin-top: 0;">Order Details</h3>
               <p><strong>Order Number:</strong> ${order.orderNumber}</p>
               <p><strong>Total Amount:</strong> ₹${order.totalAmount.toFixed(2)}</p>
@@ -364,7 +365,7 @@ export class NotificationsService {
             </div>
 
             <p>We'll send you another email when your order ships with tracking information.</p>
-            <p>Best regards,<br>The Framely Team</p>
+            <p>Best regards,<br>The PhotoFramix Team</p>
           </div>
         `,
       };
@@ -448,8 +449,9 @@ export class NotificationsService {
             <div style="max-width: 600px; margin: 0 auto; background-color: #ffffff; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
               
               <!-- Header -->
-              <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 30px; text-align: center;">
-                <div style="color: white; font-size: 28px; font-weight: bold; margin-bottom: 10px;">YashTiles</div>
+              <div style=" padding: 40px 30px; text-align: center;">
+                <img src="https://frameit-website-assets.s3.ap-south-1.amazonaws.com/favicon.svg" alt="PhotoFramix Logo" style="height: 40px; margin-bottom: 10px;" />
+                <div style="color: #ec4899; font-size: 28px; font-weight: bold; margin-bottom: 10px;">PhotoFramix</div>
                 <div style="color: rgba(255,255,255,0.9); font-size: 16px;">Premium Custom Frames</div>
               </div>
               
@@ -538,7 +540,7 @@ export class NotificationsService {
                   </div>
                   <p style="color: #666; margin: 0; font-size: 14px; line-height: 1.5;">
                     Our customer support team is here to help! Contact us at 
-                    <a href="mailto:support@yashtiles.com" style="color: #1976d2; text-decoration: none;">support@yashtiles.com</a> 
+                    <a href="mailto:support@photoframix.com" style="color: #ec4899; text-decoration: none;">support@photoframix.com</a> 
                     or call us at <strong>+91-XXX-XXX-XXXX</strong>
                   </p>
                 </div>
@@ -547,7 +549,7 @@ export class NotificationsService {
               
               <!-- Footer -->
               <div style="background-color: #f8f9fa; padding: 30px; text-align: center; border-top: 1px solid #e0e0e0;">
-                <div style="color: #333; font-weight: 600; margin-bottom: 10px;">Thank you for choosing YashTiles!</div>
+                <div style="color: #ec4899; font-weight: 600; margin-bottom: 10px;">Thank you for choosing PhotoFramix!</div>
                 <div style="color: #666; font-size: 14px; margin-bottom: 15px;">Creating beautiful memories, one frame at a time.</div>
                 
                 <!-- Social Links -->
@@ -564,7 +566,7 @@ export class NotificationsService {
                 </div>
                 
                 <div style="color: #999; font-size: 12px; margin-top: 20px;">
-                  © 2025 YashTiles. All rights reserved.<br>
+                  © 2025 PhotoFramix. All rights reserved.<br>
                   This email was sent to ${email}
                 </div>
               </div>
@@ -632,7 +634,7 @@ export class NotificationsService {
           <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 650px; margin: 0 auto; background-color: #ffffff; box-shadow: 0 0 20px rgba(0,0,0,0.1); border-radius: 10px; overflow: hidden;">
             
             <!-- Header -->
-            <div style="background: linear-gradient(135deg, #4caf50 0%, #2e7d32 100%); padding: 30px; text-align: center; color: white;">
+            <div style="background: linear-gradient(135deg, #ec4899 0%, #f472b6 100%); padding: 30px; text-align: center; color: white;">
               <div style="font-size: 48px; margin-bottom: 10px;">✅</div>
               <h1 style="margin: 0; font-size: 28px; font-weight: 600;">Payment Successful!</h1>
               <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">Your order has been confirmed and is being processed</p>
@@ -646,7 +648,7 @@ export class NotificationsService {
               </div>
               
               <!-- Payment Details -->
-              <div style="background: linear-gradient(135deg, #e8f5e8 0%, #f1f8f1 100%); padding: 25px; border-radius: 10px; margin-bottom: 25px; border-left: 4px solid #4caf50;">
+              <div style="background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%); padding: 25px; border-radius: 10px; margin-bottom: 25px; border-left: 4px solid #ec4899;">
                 <h3 style="margin-top: 0; color: #2e7d32; font-size: 20px; display: flex; align-items: center;">
                   <span style="margin-right: 10px;">💳</span>
                   Payment Details
@@ -724,7 +726,7 @@ export class NotificationsService {
                 <p style="color: #666; margin: 0;">Thank you for choosing us for your custom framing needs!</p>
                 <p style="color: #666; margin: 5px 0 0 0;">
                   Best regards,<br>
-                  <strong style="color: #333;">The YashTiles Team</strong>
+                  <strong style="color: #333;">The PhotoFramix Team</strong>
                 </p>
               </div>
             </div>
@@ -776,7 +778,7 @@ export class NotificationsService {
           <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; max-width: 650px; margin: 0 auto; background-color: #ffffff; box-shadow: 0 0 20px rgba(0,0,0,0.1); border-radius: 10px; overflow: hidden;">
             
             <!-- Header -->
-            <div style="background: linear-gradient(135deg, #f44336 0%, #d32f2f 100%); padding: 30px; text-align: center; color: white;">
+            <div style="background: linear-gradient(135deg, #ec4899 0%, #f472b6 100%); padding: 30px; text-align: center; color: white;">
               <div style="font-size: 48px; margin-bottom: 10px;">❌</div>
               <h1 style="margin: 0; font-size: 28px; font-weight: 600;">Payment Failed</h1>
               <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">We encountered an issue processing your payment</p>
@@ -790,8 +792,8 @@ export class NotificationsService {
               </div>
               
               <!-- Error Details -->
-              <div style="background: linear-gradient(135deg, #ffebee 0%, #fce4ec 100%); padding: 25px; border-radius: 10px; margin-bottom: 25px; border-left: 4px solid #f44336;">
-                <h3 style="margin-top: 0; color: #d32f2f; font-size: 20px; display: flex; align-items: center;">
+              <div style="background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%); padding: 25px; border-radius: 10px; margin-bottom: 25px; border-left: 4px solid #ec4899;">
+                <h3 style="margin-top: 0; color: #2e7d32; font-size: 20px; display: flex; align-items: center;">
                   <span style="margin-right: 10px;">⚠️</span>
                   Payment Details
                 </h3>
@@ -866,10 +868,10 @@ export class NotificationsService {
 
               <!-- Footer -->
               <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
-                <p style="color: #666; margin: 0;">Need help? Contact our support team at support@yashtiles.com</p>
+                <p style="color: #666; margin: 0;">Need help? Contact our support team at <a href="mailto:support@photoframix.com" style="color: #ec4899; text-decoration: none;">support@photoframix.com</a></p>
                 <p style="color: #666; margin: 5px 0 0 0;">
                   Best regards,<br>
-                  <strong style="color: #333;">The YashTiles Team</strong>
+                  <strong style="color: #333;">The PhotoFramix Team</strong>
                 </p>
               </div>
             </div>
@@ -953,7 +955,7 @@ export class NotificationsService {
                 </p>
                 <p style="font-size: 1rem; color: #444; margin-top: 24px;">
                   Best regards,<br>
-                  <span style="color: #2563eb; font-weight: 500;">The YashTiles Team</span>
+                  <span style="color: #2563eb; font-weight: 500;">The PhotoFramix Team</span>
                 </p>
               </div>
               <div style="background: #f1f5f9; text-align: center; padding: 16px; font-size: 0.95rem; color: #64748b;">

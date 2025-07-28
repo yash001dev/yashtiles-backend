@@ -66,19 +66,17 @@
 </head>
 <body>
     <div class="container">
-        <div class="error-icon">❌</div>
-        <h1>Payment Failed</h1>
-        <p class="message">We encountered an issue processing your payment. No charges were made to your account.</p>
-        
-        <div class="email-note">
+        <img src="https://frameit-website-assets.s3.ap-south-1.amazonaws.com/favicon.svg" alt="PhotoFramix Logo" style="height: 48px; margin-bottom: 16px;" />
+        <div class="error-icon" style="color: #ec4899;">❌</div>
+        <h1 style="color: #ec4899;">Payment Failed</h1>
+        <p class="message">We encountered an issue processing your payment. No charges were made to your account. <b>PhotoFramix</b> will help you resolve this.</p>
+        <div class="email-note" style="background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%); border-left: 4px solid #ec4899;">
             <strong>📧 Email Notification:</strong> You should receive a payment failure email 
-            with instructions on how to retry. The email will show amounts in <span class="currency">₹</span> currency.
+            with instructions on how to retry. The email will show amounts in <span class="currency" style="color: #ec4899;">₹</span> currency.
         </div>
-        
-        <a href="payu-payment-test.html" class="retry-button">🔄 Try Payment Again</a>
-        
+        <a href="payu-payment-test.html" class="retry-button" style="background: linear-gradient(135deg, #ec4899 0%, #f472b6 100%); color: white;">🔄 Try Payment Again</a>
         <div style="margin-top: 30px; color: #666;">
-            <p>If you continue to experience issues, please contact our support team.</p>
+            <p>If you continue to experience issues, please contact our support team at <a href="mailto:support@photoframix.com" style="color: #ec4899; text-decoration: none;">support@photoframix.com</a>.</p>
         </div>
     </div>
 </body>
