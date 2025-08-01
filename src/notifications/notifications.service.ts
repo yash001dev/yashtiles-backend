@@ -63,7 +63,7 @@ export class NotificationsService {
           <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; background-color: #f9f9f9; padding: 20px;">
             <div style="background-color: white; padding: 30px; border-radius: 10px; box-shadow: 0 2px 10px rgba(0,0,0,0.1);">
               <div style="text-align: center; margin-bottom: 30px;">
-                <img src="https://frameit-website-assets.s3.ap-south-1.amazonaws.com/favicon.svg" alt="PhotoFramix Logo" style="height: 48px; margin-bottom: 16px;" />
+                <img src="https://frameit-website-assets.s3.ap-south-1.amazonaws.com/favicon.svg"  alt="PhotoFramix Logo" title="PhotoFramix Logo" style="height: 48px; margin-bottom: 16px; display: block;" />
                 <h1 style="color: #ec4899; margin: 0; font-size: 28px;">Welcome to PhotoFramix! 🖼️</h1>
               </div>
               
@@ -386,7 +386,7 @@ export class NotificationsService {
         [OrderStatus.CONFIRMED]: {
           message: "Your order has been confirmed and is being prepared with care.",
           icon: "✅",
-          color: "#2e7d32",
+          color: "#f472b6",
           bgColor: "#e8f5e8"
         },
         [OrderStatus.PROCESSING]: {
@@ -427,7 +427,7 @@ export class NotificationsService {
             <div style="color: #666; font-size: 14px;">${item.frameType} • Quantity: ${item.quantity}</div>
             ${item.notes ? `<div style="color: #888; font-size: 12px; margin-top: 2px;">${item.notes}</div>` : ''}
           </div>
-          <div style="font-weight: 600; color: #2e7d32;">₹${item.price.toFixed(2)}</div>
+          <div style="font-weight: 600; color: #f472b6;">₹${item.price.toFixed(2)}</div>
         </div>
       `).join('');
 
@@ -499,7 +499,7 @@ export class NotificationsService {
                   
                   <div style="display: flex; justify-content: space-between; margin-bottom: 15px;">
                     <span style="color: #666; font-weight: 500;">Total Amount:</span>
-                    <span style="color: #2e7d32; font-weight: 700; font-size: 16px;">₹${order.totalAmount.toFixed(2)}</span>
+                    <span style="color: #f472b6; font-weight: 700; font-size: 16px;">₹${order.totalAmount.toFixed(2)}</span>
                   </div>
                   
                   ${order.trackingNumber ? `
@@ -619,7 +619,7 @@ export class NotificationsService {
             <span style="background-color: #f0f0f0; padding: 4px 8px; border-radius: 4px; font-weight: 500;">${item.quantity}</span>
           </td>
           <td style="padding: 12px; border-bottom: 1px solid #e0e0e0; text-align: right;">
-            <span style="font-weight: 600; color: #2e7d32; font-size: 16px;">₹${item.price.toFixed(2)}</span>
+            <span style="font-weight: 600; color: #f472b6; font-size: 16px;">₹${item.price.toFixed(2)}</span>
           </td>
         </tr>
       `
@@ -635,7 +635,7 @@ export class NotificationsService {
             
             <!-- Header -->
             <div style="background: linear-gradient(135deg, #ec4899 0%, #f472b6 100%); padding: 30px; text-align: center; color: white;">
-              <div style="font-size: 48px; margin-bottom: 10px;">✅</div>
+                <img src="https://frameit-website-assets.s3.ap-south-1.amazonaws.com/favicon.svg"  alt="PhotoFramix Logo" title="PhotoFramix Logo" style="height: 48px; margin-bottom: 16px; display: block;" />
               <h1 style="margin: 0; font-size: 28px; font-weight: 600;">Payment Successful!</h1>
               <p style="margin: 10px 0 0 0; font-size: 16px; opacity: 0.9;">Your order has been confirmed and is being processed</p>
             </div>
@@ -649,7 +649,7 @@ export class NotificationsService {
               
               <!-- Payment Details -->
               <div style="background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%); padding: 25px; border-radius: 10px; margin-bottom: 25px; border-left: 4px solid #ec4899;">
-                <h3 style="margin-top: 0; color: #2e7d32; font-size: 20px; display: flex; align-items: center;">
+                <h3 style="margin-top: 0; color: #f472b6; font-size: 20px; display: flex; align-items: center;">
                   <span style="margin-right: 10px;">💳</span>
                   Payment Details
                 </h3>
@@ -659,15 +659,15 @@ export class NotificationsService {
                 </div>
                 <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
                   <span style="color: #666;">Payment Method:</span>
-                  <span style="font-weight: 600; color: #333; text-transform: uppercase;">${paymentMethod}</span>
+                  <span style="font-weight: 600; color: #333; text-transform: uppercase;">Online</span>
                 </div>
                 <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
                   <span style="color: #666;">Order Number:</span>
                   <span style="font-weight: 600; color: #333;">${order.orderNumber}</span>
                 </div>
-                <div style="display: flex; justify-content: space-between; border-top: 1px solid #c8e6c9; padding-top: 10px; margin-top: 10px;">
+                <div style="display: flex; justify-content: space-between; border-top: 1px solid #eb3996; padding-top: 10px; margin-top: 10px;">
                   <span style="color: #666; font-size: 18px;">Total Amount:</span>
-                  <span style="font-weight: 700; color: #2e7d32; font-size: 24px;">₹${order.totalAmount.toFixed(2)}</span>
+                  <span style="font-weight: 700; color: #f472b6; font-size: 24px;">₹${order.totalAmount.toFixed(2)}</span>
                 </div>
               </div>
 
@@ -793,7 +793,7 @@ export class NotificationsService {
               
               <!-- Error Details -->
               <div style="background: linear-gradient(135deg, #fce7f3 0%, #fbcfe8 100%); padding: 25px; border-radius: 10px; margin-bottom: 25px; border-left: 4px solid #ec4899;">
-                <h3 style="margin-top: 0; color: #2e7d32; font-size: 20px; display: flex; align-items: center;">
+                <h3 style="margin-top: 0; color: #f472b6; font-size: 20px; display: flex; align-items: center;">
                   <span style="margin-right: 10px;">⚠️</span>
                   Payment Details
                 </h3>
@@ -846,7 +846,7 @@ export class NotificationsService {
 
               <!-- Retry Instructions -->
               <div style="background: linear-gradient(135deg, #e8f5e8 0%, #f1f8f1 100%); padding: 25px; border-radius: 10px; margin-bottom: 25px; border-left: 4px solid #4caf50;">
-                <h3 style="margin-top: 0; color: #2e7d32; font-size: 20px; display: flex; align-items: center;">
+                <h3 style="margin-top: 0; color: #f472b6; font-size: 20px; display: flex; align-items: center;">
                   <span style="margin-right: 10px;">🔄</span>
                   What You Can Do
                 </h3>
@@ -861,7 +861,7 @@ export class NotificationsService {
 
               <!-- Call to Action -->
               <div style="text-align: center; margin-bottom: 25px;">
-                <a href="#" style="background: linear-gradient(135deg, #4caf50 0%, #2e7d32 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: 600; display: inline-block; box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3); transition: all 0.3s ease;">
+                <a href="#" style="background: linear-gradient(135deg, #4caf50 0%, #f472b6 100%); color: white; padding: 15px 30px; text-decoration: none; border-radius: 8px; font-weight: 600; display: inline-block; box-shadow: 0 4px 12px rgba(76, 175, 80, 0.3); transition: all 0.3s ease;">
                   🔄 Try Payment Again
                 </a>
               </div>
