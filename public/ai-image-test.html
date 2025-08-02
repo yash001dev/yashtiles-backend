@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Image Generation Test</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .container {
+            background: white;
+            padding: 30px;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .form-group {
+            margin-bottom: 20px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select, textarea {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+        }
+        textarea {
+            height: 100px;
+            resize: vertical;
+        }
+        button {
+            background-color: #007bff;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+        }
+        button:hover {
+            background-color: #0056b3;
+        }
+        button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        .result {
+            margin-top: 30px;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+            background-color: #f9f9f9;
+        }
+        .generated-image {
+            max-width: 100%;
+            height: auto;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+        .loading {
+            text-align: center;
+            color: #666;
+        }
+        .error {
+            color: #dc3545;
+            background-color: #f8d7da;
+            padding: 10px;
+            border-radius: 5px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>AI Image Generation Test</h1>
+        <p>Test the AI image generation API using AWS Bedrock</p>
+        
+        <form id="imageForm">
+            <div class="form-group">
+                <label for="prompt">Image Prompt:</label>
+                <textarea id="prompt" name="prompt" placeholder="Describe the image you want to generate..." required>A beautiful sunset over mountains with vibrant colors</textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="negativePrompt">Negative Prompt (optional):</label>
+                <textarea id="negativePrompt" name="negativePrompt" placeholder="Describe what you don't want in the image...">blurry, low quality, distorted</textarea>
+            </div>
+            
+            <div class="form-group">
+                <label for="model">AI Model:</label>
+                <select id="model" name="model">
+                    <option value="stability.stable-diffusion-xl-v1">Stable Diffusion XL</option>
+                    <option value="stability.stable-diffusion-xl-v1-1024x1024">Stable Diffusion XL (1024x1024)</option>
+                    <option value="amazon.titan-image-generator-v1" selected>Titan Image Generator</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="style">Style (optional):</label>
+                <select id="style" name="style">
+                    <option value="">No specific style</option>
+                    <option value="photographic">Photographic</option>
+                    <option value="digital-art">Digital Art</option>
+                    <option value="cinematic">Cinematic</option>
+                    <option value="anime">Anime</option>
+                    <option value="cartoon">Cartoon</option>
+                    <option value="fantasy">Fantasy</option>
+                    <option value="neon-punk">Neon Punk</option>
+                    <option value="isometric">Isometric</option>
+                    <option value="low-poly">Low Poly</option>
+                    <option value="origami">Origami</option>
+                    <option value="modeling">Modeling</option>
+                </select>
+            </div>
+            
+            <div class="form-group">
+                <label for="width">Width (512-1024):</label>
+                <input type="number" id="width" name="width" value="1024" min="512" max="1024">
+            </div>
+            
+            <div class="form-group">
+                <label for="height">Height (512-1024):</label>
+                <input type="number" id="height" name="height" value="1024" min="512" max="1024">
+            </div>
+            
+            <div class="form-group">
+                <label for="guidanceScale">Guidance Scale (1-20):</label>
+                <input type="number" id="guidanceScale" name="guidanceScale" value="7.5" min="1" max="20" step="0.1">
+            </div>
+            
+            <div class="form-group">
+                <label for="steps">Steps (10-50):</label>
+                <input type="number" id="steps" name="steps" value="30" min="10" max="50">
+            </div>
+            
+            <button type="submit" id="generateBtn">Generate Image</button>
+        </form>
+        
+        <div id="result" class="result" style="display: none;">
+            <h3>Generated Image</h3>
+            <div id="loading" class="loading">Generating image...</div>
+            <div id="error" class="error" style="display: none;"></div>
+            <img id="generatedImage" class="generated-image" style="display: none;">
+            <div id="imageInfo" style="margin-top: 10px; color: #666;"></div>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('imageForm').addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const generateBtn = document.getElementById('generateBtn');
+            const result = document.getElementById('result');
+            const loading = document.getElementById('loading');
+            const error = document.getElementById('error');
+            const generatedImage = document.getElementById('generatedImage');
+            const imageInfo = document.getElementById('imageInfo');
+            
+            // Show loading state
+            generateBtn.disabled = true;
+            result.style.display = 'block';
+            loading.style.display = 'block';
+            error.style.display = 'none';
+            generatedImage.style.display = 'none';
+            imageInfo.textContent = '';
+            
+            // Get form data
+            const formData = new FormData(e.target);
+            const requestData = {
+                prompt: formData.get('prompt'),
+                negativePrompt: formData.get('negativePrompt') || undefined,
+                model: formData.get('model'),
+                style: formData.get('style') || undefined,
+                width: parseInt(formData.get('width')),
+                height: parseInt(formData.get('height')),
+                guidanceScale: parseFloat(formData.get('guidanceScale')),
+                steps: parseInt(formData.get('steps'))
+            };
+            
+            try {
+                const response = await fetch('/ai/generate-image', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify(requestData)
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    // Display the generated image
+                    generatedImage.src = data.imageData;
+                    generatedImage.style.display = 'block';
+                    imageInfo.textContent = `Generation time: ${data.generationTime}ms`;
+                } else {
+                    throw new Error(data.message || 'Failed to generate image');
+                }
+            } catch (err) {
+                error.textContent = `Error: ${err.message}`;
+                error.style.display = 'block';
+            } finally {
+                loading.style.display = 'none';
+                generateBtn.disabled = false;
+            }
+        });
+    </script>
+</body>
+</html> 
