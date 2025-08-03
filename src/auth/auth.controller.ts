@@ -3,6 +3,7 @@ import {
   Post,
   Get,
   Body,
+  Query,
   UseGuards,
   Req,
   Res,
@@ -18,6 +19,7 @@ import { ForgotPasswordDto } from "./dto/forgot-password.dto";
 import { ResetPasswordDto } from "./dto/reset-password.dto";
 import { VerifyEmailDto } from "./dto/verify-email.dto";
 import { ResendVerificationDto } from "./dto/resend-verification.dto";
+import { ValidateTokenDto } from "./dto/validate-token.dto";
 import { RefreshTokenGuard } from "./guards/refresh-token.guard";
 import { JwtAuthGuard } from "./guards/jwt-auth.guard";
 import { GoogleAuthGuard } from "./guards/google-auth.guard";
@@ -181,7 +183,7 @@ export class AuthController {
     });
 
     // Redirect to frontend with success
-    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3001";
+  const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3001";
     const redirectUrl = `${frontendUrl}/auth/google/success?token=${result.tokens.accessToken}`;
 
     response.redirect(redirectUrl);
@@ -212,5 +214,31 @@ export class AuthController {
       user: result.user,
       accessToken: result.tokens.accessToken,
     };
+  }
+
+  @Get("validate")
+  @HttpCode(HttpStatus.OK)
+  @ApiOperation({ summary: "Validate JWT access token" })
+  @ApiResponse({
+    status: 200,
+    description: "Token validation result",
+    schema: {
+      type: "object",
+      properties: {
+        isValid: { type: "boolean" },
+        user: { type: "object" },
+        payload: { type: "object" },
+        message: { type: "string" },
+      },
+    },
+  })
+  async validateToken(@Query("token") token: string) {
+    if (!token) {
+      return {
+        isValid: false,
+        message: "Token is required",
+      };
+    }
+    return this.authService.validateToken(token);
   }
 }

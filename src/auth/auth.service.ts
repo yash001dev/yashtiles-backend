@@ -291,7 +291,7 @@ export class AuthService {
       // Create new user with Google data
       const createUserDto = {
         firstName,
-        lastName: lastName ||  "", // Handle optional lastName, default to empty string
+        lastName: lastName || "", // Handle optional lastName, default to empty string
         email,
         password: "", // No password for Google users
         avatar,
@@ -354,6 +354,45 @@ export class AuthService {
     };
 
     return this.googleLogin(googleLoginDto);
+  }
+
+  async validateToken(token: string) {
+    try {
+      const payload = await this.jwtService.verifyAsync(token);
+
+      // Get user details to ensure user still exists
+      const user = await this.usersService.findOne(payload.sub);
+      if (!user) {
+        return {
+          isValid: false,
+          message: "User not found",
+        };
+      }
+
+      return {
+        isValid: true,
+        user: {
+          id: user._id.toString(),
+          firstName: user.firstName,
+          lastName: user.lastName,
+          email: user.email,
+          role: user.role,
+          isEmailVerified: user.isEmailVerified,
+        },
+        payload: {
+          sub: payload.sub,
+          email: payload.email,
+          role: payload.role,
+          iat: payload.iat,
+          exp: payload.exp,
+        },
+      };
+    } catch (error) {
+      return {
+        isValid: false,
+        message: error.message || "Invalid token",
+      };
+    }
   }
 
   private async generateTokens(userId: string, email: string, role: string) {
