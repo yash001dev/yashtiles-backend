@@ -5,9 +5,13 @@ import {
   IsOptional,
   IsEnum,
   IsBoolean,
+  IsObject,
 } from "class-validator";
 import { ApiProperty, ApiPropertyOptional } from "@nestjs/swagger";
 import { UserRole } from "../../common/decorators/roles.decorator";
+import { ValidateNested } from "class-validator";
+import { Type } from "class-transformer";
+import { AddressDto } from "./address-dto";
 
 export class CreateUserDto {
   @ApiProperty({ description: "User first name" })
@@ -62,4 +66,21 @@ export class CreateUserDto {
   @IsOptional()
   @IsString()
   googleRefreshToken?: string;
+
+  @ApiPropertyOptional({
+    description: "User address",
+    type: "object",
+    example: {
+      street: "123 Main St",
+      city: "Mumbai",
+      state: "Maharashtra",
+      zipCode: "400001",
+      country: "IN"
+    }
+  })
+  @IsOptional()
+  @IsObject()
+  @ValidateNested()
+  @Type(() => AddressDto)
+  address?: AddressDto;
 }

@@ -1,6 +1,8 @@
 import { PartialType } from "@nestjs/swagger";
 import { CreateUserDto } from "./create-user.dto";
-import { IsOptional, IsString, IsDate, IsBoolean } from "class-validator";
+import { IsOptional, IsString, IsDate, IsBoolean, IsObject, ValidateNested } from "class-validator";
+import { Type } from "class-transformer";
+import { AddressDto } from "./address-dto";
 
 export class UpdateUserDto extends PartialType(CreateUserDto) {
   @IsOptional()
@@ -42,4 +44,10 @@ export class UpdateUserDto extends PartialType(CreateUserDto) {
   @IsOptional()
   @IsString()
   googleRefreshToken?: string;
+  
+  @IsOptional()
+  @IsObject()
+  @ValidateNested()
+  @Type(() => AddressDto)
+  address?: AddressDto;
 }
