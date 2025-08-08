@@ -183,7 +183,7 @@ export class AuthController {
     });
 
     // Redirect to frontend with success
-  const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3001";
+    const frontendUrl = process.env.FRONTEND_URL || "http://localhost:3001";
     const redirectUrl = `${frontendUrl}/auth/google/success?token=${result.tokens.accessToken}`;
 
     response.redirect(redirectUrl);

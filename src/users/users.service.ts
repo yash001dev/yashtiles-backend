@@ -60,10 +60,7 @@ export class UsersService {
   }
 
   async findOne(id: string): Promise<UserDocument> {
-    const user = await this.userModel
-      .findById(id)
-      .select("-password -refreshToken")
-      .exec();
+    const user = await this.userModel.findById(id).select("-password").exec();
 
     if (!user) {
       throw new NotFoundException("User not found");
@@ -111,7 +108,11 @@ export class UsersService {
     userId: string,
     refreshToken: string
   ): Promise<void> {
-    await this.userModel.findByIdAndUpdate(userId, { refreshToken }).exec();
+    let hashedToken = null;
+    if (refreshToken) {
+      hashedToken = await bcrypt.hash(refreshToken, 12);
+    }
+    await this.userModel.findByIdAndUpdate(userId, { refreshToken: hashedToken }).exec();
   }
 
   async updateLastLogin(userId: string): Promise<void> {
