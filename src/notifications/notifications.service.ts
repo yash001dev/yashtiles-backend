@@ -540,7 +540,7 @@ export class NotificationsService {
                   </div>
                   <p style="color: #666; margin: 0; font-size: 14px; line-height: 1.5;">
                     Our customer support team is here to help! Contact us at 
-                    <a href="mailto:support@photoframix.com" style="color: #ec4899; text-decoration: none;">support@photoframix.com</a> 
+                    <a href="mailto:photoframix@gmail.com" style="color: #ec4899; text-decoration: none;">photoframix@gmail.com</a> 
                     or call us at <strong>+91-XXX-XXX-XXXX</strong>
                   </p>
                 </div>
@@ -868,7 +868,7 @@ export class NotificationsService {
 
               <!-- Footer -->
               <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px solid #e0e0e0;">
-                <p style="color: #666; margin: 0;">Need help? Contact our support team at <a href="mailto:support@photoframix.com" style="color: #ec4899; text-decoration: none;">support@photoframix.com</a></p>
+                <p style="color: #666; margin: 0;">Need help? Contact our support team at <a href="mailto:photoframix@gmail.com" style="color: #ec4899; text-decoration: none;">photoframix@gmail.com</a></p>
                 <p style="color: #666; margin: 5px 0 0 0;">
                   Best regards,<br>
                   <strong style="color: #333;">The PhotoFramix Team</strong>
